@@ -639,12 +639,49 @@ window.addEventListener('hashchange', checkHash);
   requestAnimationFrame(animate);
 })();
 
-// ─── Boot ─────────────────────────────────────────────────────────
-loadConfig().then(checkHash);
+// ─── Live API state polling ────────────────────────────────────────
+// Polls api.civicresilience.net/overlay/state every 5s for speaker
+// and ticker updates pushed from the control panel or news bot.
+const API_STATE_URL = 'https://api.civicresilience.net/overlay/state';
+let _apiVersion = -1;
+let _apiLtVisible = false;
 
-// Hot reload every 30s (picks up scenes.json edits without restarting OBS)
+async function pollApiState() {
+  try {
+    const r = await fetch(API_STATE_URL);
+    if (!r.ok) return;
+    const s = await r.json();
+    if (s.version === _apiVersion) return;
+    _apiVersion = s.version;
+
+    // Lower third
+    const ltEl = document.getElementById('lower-third');
+    if (s.lower_third_visible && s.speaker_name) {
+      document.getElementById('lt-name').textContent  = s.speaker_name  || '';
+      document.getElementById('lt-title').textContent = s.speaker_title || '';
+      ltEl.classList.add('visible');
+      _apiLtVisible = true;
+    } else if (_apiLtVisible) {
+      ltEl.classList.remove('visible');
+      _apiLtVisible = false;
+    }
+
+    // Ticker — API items take over when present
+    if (s.ticker_items && s.ticker_items.length) {
+      if (CONFIG) CONFIG.ticker_items = s.ticker_items;
+      else CONFIG = { ticker_items: s.ticker_items };
+      initTicker();
+    }
+  } catch(e) {}
+}
+setInterval(pollApiState, 5000);
+
+// ─── Boot ─────────────────────────────────────────────────────────
+loadConfig().then(() => { checkHash(); pollApiState(); });
+
+// Hot reload scenes.json every 30s
 setInterval(() => {
-  if (CONFIG) initTicker(); // refresh ticker items
+  if (CONFIG) loadConfig();
 }, 30000);
 </script>
 </body>
