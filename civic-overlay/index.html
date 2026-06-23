@@ -393,6 +393,9 @@ function gotoScene(idx,transOverride){
     }
 
     document.getElementById('scene-nav').textContent=`Scene ${idx+1}/${CONFIG.scenes.length}: ${scene.name}`;
+    // Transparent background for live camera scenes
+    const bgLayouts=['fullscreen-bg','brb'];
+    window.overlayTransparent=!bgLayouts.includes(scene.layout);
   },CONFIG.settings.default_transition_ms||800);
 }
 
@@ -507,6 +510,7 @@ function checkHash(){
   const NUM=90,MAX_DIST=200;
   const P=[0,180,216];
   function drawBg(){
+    if(window.overlayTransparent)return; // camera scenes — skip fill, let camera show through
     const g=ctx.createRadialGradient(960,540,0,960,540,900);
     g.addColorStop(0,'#0d2137');g.addColorStop(.6,'#091929');g.addColorStop(1,'#040d14');
     ctx.fillStyle=g;ctx.fillRect(0,0,1920,1080);
