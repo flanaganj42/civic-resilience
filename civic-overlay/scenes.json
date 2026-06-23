@@ -1,0 +1,171 @@
+{
+  "_doc": "Edit this file to configure OBS scenes. Reload the browser source in OBS to apply changes. Keys: arrows=prev/next, 1-9=jump, L=lower thirds, R=reload, B=BRB toggle",
+  "settings": {
+    "default_transition": "fade",
+    "default_transition_ms": 800,
+    "auto_advance": false,
+    "auto_advance_ms": 12000,
+    "brand_color_primary": "#00b4d8",
+    "brand_color_secondary": "#1a3a5c",
+    "show_ticker": true,
+    "show_logo": true,
+    "show_clock": true,
+    "show_corner_frames": true,
+    "show_side_panels": true,
+    "logo_text": "civicresilience.net",
+    "logo_position": "bottom-right"
+  },
+
+  "ticker_items": [
+    "Civic Resilience Network — Live Broadcast",
+    "Building stronger communities through civic engagement",
+    "civicresilience.net — Stay informed. Stay engaged.",
+    "Democracy works when citizens participate",
+    "Join the conversation — civicresilience.net"
+  ],
+
+  "info_feed": [
+    "Civic engagement is democracy in action",
+    "Community voices matter — civicresilience.net",
+    "Stay informed. Stay engaged.",
+    "Building resilient communities together",
+    "Your participation strengthens democracy"
+  ],
+
+  "lower_thirds": [
+    { "name": "James Flanagan", "title": "Civic Resilience Network", "duration_ms": 5000 },
+    { "name": "Guest Speaker",  "title": "Community Advocate",       "duration_ms": 5000 },
+    { "name": "Panel Discussion", "title": "Civic Policy & Engagement", "duration_ms": 5000 }
+  ],
+
+  "scenes": [
+    {
+      "id": "intro",
+      "name": "Intro",
+      "layout": "fullscreen-bg",
+      "transition": "fade",
+      "show_title": true,
+      "title": "Civic Resilience Network",
+      "subtitle": "Live Broadcast",
+      "background": "https://d8j0ntlcm91z4.cloudfront.net/user_3FLlwJ5yGAHyfRnKFrhBv8AvBal/hf_20260623_044141_7c9bc721-f5c5-4184-a9ce-cd7cecab80e0.png",
+      "images": []
+    },
+    {
+      "id": "standby",
+      "name": "Standby",
+      "layout": "fullscreen-bg",
+      "transition": "fade",
+      "show_title": true,
+      "title": "Civic Resilience Network",
+      "subtitle": "Live Broadcast",
+      "images": []
+    },
+    {
+      "id": "brb",
+      "name": "Be Right Back",
+      "layout": "brb",
+      "transition": "fade",
+      "brb_text": "Be Right Back",
+      "brb_sub": "civicresilience.net",
+      "background": "https://d8j0ntlcm91z4.cloudfront.net/user_3FLlwJ5yGAHyfRnKFrhBv8AvBal/hf_20260623_044143_1dcc3f2a-1813-444b-9ee7-fb51fb6dc353.png",
+      "images": []
+    },
+    {
+      "id": "full-cam",
+      "name": "Full Camera",
+      "layout": "full-cam",
+      "transition": "fade",
+      "cam_zone": {
+        "left": "0",
+        "top": "0",
+        "width": "1920px",
+        "height": "calc(100% - 52px)"
+      },
+      "images": []
+    },
+    {
+      "id": "talking-head",
+      "name": "Talking Head",
+      "layout": "talking-head",
+      "transition": "slide-up",
+      "cam_zone": {
+        "left": "0",
+        "top": "0",
+        "width": "1344px",
+        "height": "calc(100% - 52px)"
+      },
+      "images": []
+    },
+    {
+      "id": "single",
+      "name": "Single Source",
+      "layout": "fullscreen",
+      "transition": "fade",
+      "images": [
+        { "src": "img/placeholder-1.jpg", "label": "Main Camera" }
+      ]
+    },
+    {
+      "id": "split2",
+      "name": "Split 2-Up",
+      "layout": "grid-2",
+      "transition": "slide-up",
+      "images": [
+        { "src": "img/placeholder-1.jpg", "label": "Speaker 1" },
+        { "src": "img/placeholder-2.jpg", "label": "Speaker 2" }
+      ]
+    },
+    {
+      "id": "split3",
+      "name": "Split 3-Up",
+      "layout": "grid-3",
+      "transition": "zoom-in",
+      "images": [
+        { "src": "img/placeholder-1.jpg", "label": "Main" },
+        { "src": "img/placeholder-2.jpg", "label": "Guest 1" },
+        { "src": "img/placeholder-3.jpg", "label": "Guest 2" }
+      ]
+    },
+    {
+      "id": "split4",
+      "name": "Split 4-Up",
+      "layout": "grid-4",
+      "transition": "zoom-in",
+      "images": [
+        { "src": "img/placeholder-1.jpg", "label": "Speaker 1" },
+        { "src": "img/placeholder-2.jpg", "label": "Speaker 2" },
+        { "src": "img/placeholder-3.jpg", "label": "Speaker 3" },
+        { "src": "img/placeholder-4.jpg", "label": "Speaker 4" }
+      ]
+    },
+    {
+      "id": "sidebar",
+      "name": "Sidebar Right",
+      "layout": "sidebar-r",
+      "transition": "slide-up",
+      "images": [
+        { "src": "img/placeholder-1.jpg", "label": "Main Camera" },
+        { "src": "img/placeholder-2.jpg", "label": "Info Panel" }
+      ]
+    },
+    {
+      "id": "pip",
+      "name": "Picture-in-Picture",
+      "layout": "pip",
+      "transition": "fade",
+      "images": [
+        { "src": "img/placeholder-1.jpg", "label": "" },
+        { "src": "img/placeholder-2.jpg", "label": "" }
+      ]
+    },
+    {
+      "id": "content",
+      "name": "Content Background",
+      "layout": "fullscreen-bg",
+      "transition": "fade",
+      "show_title": false,
+      "background": "https://d8j0ntlcm91z4.cloudfront.net/user_3FLlwJ5yGAHyfRnKFrhBv8AvBal/hf_20260623_044145_38d22069-5060-4794-9aca-c2a9a566dd56.png",
+      "images": []
+    }
+  ]
+}

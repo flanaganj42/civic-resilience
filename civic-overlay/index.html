@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<title>Civic Resilience Network — OBS Overlay</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;}
+:root{
+  --primary:#00b4d8;--secondary:#1a3a5c;--accent:#48cae4;
+  --white:#ffffff;--dark:#0a1628;--trans-ms:800ms;
+  --glow:0 0 20px rgba(0,180,216,0.5);
+  --glow-strong:0 0 40px rgba(0,180,216,0.7);
+}
+#bg-canvas{position:absolute;inset:0;width:1920px;height:1080px;z-index:0;}
+#scene-bg-img{position:absolute;inset:0;width:1920px;height:1080px;object-fit:cover;z-index:1;display:none;opacity:0.55;}
+
+/* ── Corner Frames ───────────────────────────────────────────────── */
+.corner-frame{position:absolute;width:72px;height:72px;z-index:40;pointer-events:none;}
+.corner-frame::before,.corner-frame::after{content:'';position:absolute;background:var(--primary);}
+.corner-tl{top:18px;left:18px;}
+.corner-tl::before{top:0;left:0;width:100%;height:3px;box-shadow:var(--glow);}
+.corner-tl::after{top:0;left:0;width:3px;height:100%;box-shadow:var(--glow);}
+.corner-tr{top:18px;right:18px;}
+.corner-tr::before{top:0;right:0;width:100%;height:3px;box-shadow:var(--glow);}
+.corner-tr::after{top:0;right:0;width:3px;height:100%;box-shadow:var(--glow);}
+.corner-bl{bottom:62px;left:18px;}
+.corner-bl::before{bottom:0;left:0;width:100%;height:3px;box-shadow:var(--glow);}
+.corner-bl::after{bottom:0;left:0;width:3px;height:100%;box-shadow:var(--glow);}
+.corner-br{bottom:62px;right:18px;}
+.corner-br::before{bottom:0;right:0;width:100%;height:3px;box-shadow:var(--glow);}
+.corner-br::after{bottom:0;right:0;width:3px;height:100%;box-shadow:var(--glow);}
+/* Corner pulse animation */
+.corner-frame{animation:corner-pulse 4s ease-in-out infinite;}
+@keyframes corner-pulse{0%,100%{opacity:.7;}50%{opacity:1;filter:drop-shadow(0 0 8px var(--primary));}}
+
+/* ── Side Panels ─────────────────────────────────────────────────── */
+#side-panel-left,#side-panel-right{
+  position:absolute;top:0;bottom:52px;
+  width:56px;z-index:35;pointer-events:none;
+  overflow:hidden;
+}
+#side-panel-left{left:0;background:linear-gradient(90deg,rgba(10,22,40,0.7) 0%,transparent 100%);}
+#side-panel-right{right:0;background:linear-gradient(270deg,rgba(10,22,40,0.7) 0%,transparent 100%);}
+.scan-line{
+  position:absolute;left:50%;width:1px;height:120px;
+  background:linear-gradient(180deg,transparent,var(--primary),transparent);
+  animation:scan-down 3s linear infinite;
+  transform:translateX(-50%);
+  opacity:0.7;
+}
+.scan-line:nth-child(2){animation-delay:-1.5s;opacity:0.4;}
+.scan-line:nth-child(3){animation-delay:-0.8s;opacity:0.3;width:1px;}
+#side-panel-right .scan-line{animation-name:scan-up;}
+@keyframes scan-down{from{top:-120px;}to{top:100%;}}
+@keyframes scan-up{from{top:100%;}to{top:-120px;}}
+/* Tick marks on side panels */
+.tick{
+  position:absolute;right:0;width:10px;height:1px;
+  background:var(--primary);opacity:0.4;
+}
+#side-panel-right .tick{left:0;right:auto;}
+
+/* ── Camera Zone (glow border for where camera sits) ─────────────── */
+#cam-zone{
+  position:absolute;z-index:30;pointer-events:none;
+  border:2px solid rgba(0,180,216,0.35);
+  box-shadow:inset 0 0 30px rgba(0,180,216,0.08),0 0 20px rgba(0,180,216,0.15);
+  animation:cam-glow 3s ease-in-out infinite;
+  transition:all var(--trans-ms) ease;
+  display:none;
+}
+@keyframes cam-glow{
+  0%,100%{border-color:rgba(0,180,216,0.3);box-shadow:inset 0 0 30px rgba(0,180,216,0.06),0 0 20px rgba(0,180,216,0.12);}
+  50%{border-color:rgba(0,180,216,0.6);box-shadow:inset 0 0 50px rgba(0,180,216,0.12),0 0 40px rgba(0,180,216,0.25);}
+}
+/* Corner accents on cam zone */
+#cam-zone::before,#cam-zone::after{
+  content:'';position:absolute;
+  border-color:var(--primary);border-style:solid;
+  width:24px;height:24px;
+}
+#cam-zone::before{top:-2px;left:-2px;border-width:3px 0 0 3px;box-shadow:-4px -4px 12px rgba(0,180,216,0.4);}
+#cam-zone::after{bottom:-2px;right:-2px;border-width:0 3px 3px 0;box-shadow:4px 4px 12px rgba(0,180,216,0.4);}
+
+/* ── Info Panel (talking head right side) ───────────────────────── */
+#info-panel{
+  position:absolute;top:0;right:0;bottom:52px;
+  width:576px;z-index:35;pointer-events:none;
+  background:linear-gradient(180deg,rgba(10,22,40,0.92) 0%,rgba(26,58,92,0.85) 100%);
+  border-left:2px solid var(--primary);
+  box-shadow:-8px 0 40px rgba(0,180,216,0.15);
+  display:none;
+  flex-direction:column;
+  padding:40px 30px 30px;
+  overflow:hidden;
+}
+#info-panel .ip-logo{
+  font-size:18px;font-weight:800;color:var(--primary);
+  letter-spacing:0.12em;text-transform:uppercase;
+  margin-bottom:24px;border-bottom:1px solid rgba(0,180,216,0.3);
+  padding-bottom:16px;
+}
+#info-panel .ip-stat{
+  margin-bottom:16px;
+}
+#info-panel .ip-stat-label{
+  font-size:11px;color:rgba(255,255,255,0.45);
+  text-transform:uppercase;letter-spacing:0.15em;margin-bottom:4px;
+}
+#info-panel .ip-stat-value{
+  font-size:22px;font-weight:600;color:var(--white);
+}
+#info-panel .ip-divider{
+  height:1px;background:linear-gradient(90deg,var(--primary),transparent);
+  margin:20px 0;opacity:0.4;
+}
+/* Animated data bars */
+.ip-bar-wrap{margin-bottom:10px;}
+.ip-bar-label{font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px;letter-spacing:0.1em;}
+.ip-bar{height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;}
+.ip-bar-fill{height:100%;background:var(--primary);border-radius:2px;animation:bar-breathe 4s ease-in-out infinite;}
+@keyframes bar-breathe{0%,100%{opacity:.6;}50%{opacity:1;}}
+/* Scrolling data feed */
+.ip-feed{
+  margin-top:20px;flex:1;overflow:hidden;
+  border-top:1px solid rgba(0,180,216,0.2);
+  padding-top:12px;
+}
+.ip-feed-item{
+  font-size:12px;color:rgba(255,255,255,0.55);
+  padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);
+  display:flex;align-items:center;gap:8px;
+}
+.ip-feed-dot{width:4px;height:4px;border-radius:50%;background:var(--primary);flex-shrink:0;animation:blink 2s ease-in-out infinite;}
+
+/* ── Scene Container ─────────────────────────────────────────────── */
+#scene-wrap{position:absolute;inset:0;z-index:10;transition:opacity var(--trans-ms) ease,transform var(--trans-ms) ease;}
+#scene-wrap.fade-out{opacity:0;}
+#scene-wrap.fade-in{opacity:1;}
+#scene-wrap.slide-out{transform:translateY(-40px);opacity:0;}
+#scene-wrap.slide-in{transform:translateY(0);opacity:1;}
+#scene-wrap.zoom-out{transform:scale(1.04);opacity:0;}
+#scene-wrap.zoom-in{transform:scale(1);opacity:1;}
+
+/* ── Image Grid Layouts ──────────────────────────────────────────── */
+.image-area{position:absolute;overflow:hidden;transition:all var(--trans-ms) ease;}
+.image-area img{width:100%;height:100%;object-fit:cover;display:block;}
+.img-label{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:8px 14px;
+  background:linear-gradient(transparent,rgba(0,0,0,0.72));
+  color:var(--white);font-size:22px;font-weight:500;letter-spacing:.02em;
+}
+.layout-fullscreen-bg .image-area{display:none;}
+.layout-fullscreen .image-area:nth-child(1){inset:0;}
+.layout-grid-2 .image-area:nth-child(1){top:0;left:0;width:960px;height:1080px;}
+.layout-grid-2 .image-area:nth-child(2){top:0;left:960px;width:960px;height:1080px;}
+.layout-grid-2 .image-area{border-right:2px solid var(--primary);}
+.layout-grid-3 .image-area:nth-child(1){top:0;left:0;width:1152px;height:1080px;}
+.layout-grid-3 .image-area:nth-child(2){top:0;left:1152px;width:768px;height:540px;}
+.layout-grid-3 .image-area:nth-child(3){top:540px;left:1152px;width:768px;height:540px;}
+.layout-grid-3 .image-area{border:1px solid rgba(0,180,216,0.3);}
+.layout-grid-4 .image-area:nth-child(1){top:0;left:0;width:960px;height:540px;}
+.layout-grid-4 .image-area:nth-child(2){top:0;left:960px;width:960px;height:540px;}
+.layout-grid-4 .image-area:nth-child(3){top:540px;left:0;width:960px;height:540px;}
+.layout-grid-4 .image-area:nth-child(4){top:540px;left:960px;width:960px;height:540px;}
+.layout-grid-4 .image-area{border:1px solid rgba(0,180,216,0.25);}
+.layout-sidebar-r .image-area:nth-child(1){top:0;left:0;width:1344px;height:1080px;}
+.layout-sidebar-r .image-area:nth-child(2){top:0;left:1344px;width:576px;height:1080px;background:var(--secondary);}
+.layout-sidebar-r .image-area:nth-child(2){border-left:3px solid var(--primary);}
+.layout-pip .image-area:nth-child(1){inset:0;}
+.layout-pip .image-area:nth-child(2){bottom:120px;right:30px;top:auto;left:auto;width:420px;height:236px;border:3px solid var(--primary);box-shadow:var(--glow);z-index:20;}
+/* Talking head: left camera zone + right info panel */
+.layout-talking-head .image-area:nth-child(1){top:0;left:0;width:1344px;height:1080px;}
+/* full-cam: just a background */
+.layout-full-cam .image-area:nth-child(1){inset:0;}
+
+/* ── Standby Title ───────────────────────────────────────────────── */
+#standby-title{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:15;pointer-events:none;opacity:0;transition:opacity 1.2s ease;}
+#standby-title.visible{opacity:1;}
+#standby-title h1{font-size:82px;font-weight:800;letter-spacing:.04em;color:var(--white);text-shadow:0 0 60px rgba(0,180,216,0.6),0 4px 24px rgba(0,0,0,0.5);text-transform:uppercase;}
+#standby-title p{margin-top:14px;font-size:32px;font-weight:300;color:var(--accent);letter-spacing:.18em;text-transform:uppercase;}
+#standby-title .domain{margin-top:24px;font-size:22px;color:rgba(255,255,255,0.5);letter-spacing:.12em;}
+.title-line{width:240px;height:2px;background:linear-gradient(90deg,transparent,var(--primary),transparent);margin:18px 0;animation:line-pulse 3s ease-in-out infinite;}
+@keyframes line-pulse{0%,100%{opacity:.4;width:160px}50%{opacity:1;width:320px}}
+
+/* ── BRB / Intro overlay ─────────────────────────────────────────── */
+#brb-overlay{position:absolute;inset:0;z-index:45;display:none;align-items:center;justify-content:center;flex-direction:column;background:rgba(10,22,40,0.6);}
+#brb-overlay.visible{display:flex;}
+#brb-overlay h2{font-size:96px;font-weight:900;color:var(--white);text-transform:uppercase;letter-spacing:.08em;text-shadow:0 0 80px rgba(0,180,216,0.8);}
+#brb-overlay p{font-size:28px;color:var(--accent);letter-spacing:.2em;margin-top:16px;}
+#brb-overlay .brb-bar{width:400px;height:3px;background:rgba(255,255,255,0.15);margin-top:32px;border-radius:2px;overflow:hidden;}
+#brb-overlay .brb-bar-fill{height:100%;width:0;background:var(--primary);animation:brb-load 8s ease-in-out infinite;}
+@keyframes brb-load{0%{width:0}80%{width:100%}100%{width:100%}}
+
+/* ── Lower Third ─────────────────────────────────────────────────── */
+#lower-third{position:absolute;bottom:90px;left:0;right:0;height:88px;z-index:50;display:flex;align-items:stretch;transform:translateY(120px);opacity:0;transition:transform .55s cubic-bezier(.22,1,.36,1),opacity .4s ease;pointer-events:none;}
+#lower-third.visible{transform:translateY(0);opacity:1;}
+.lt-accent-bar{width:6px;background:var(--primary);box-shadow:var(--glow);flex-shrink:0;}
+.lt-body{background:rgba(10,22,40,0.88);backdrop-filter:blur(8px);padding:0 28px;display:flex;flex-direction:column;justify-content:center;border-top:1px solid rgba(0,180,216,0.3);border-bottom:1px solid rgba(0,180,216,0.3);flex:1;}
+.lt-name{font-size:34px;font-weight:700;color:var(--white);line-height:1.15;}
+.lt-title{font-size:20px;font-weight:400;color:var(--primary);margin-top:2px;}
+.lt-logo-end{width:180px;background:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.lt-logo-end span{color:var(--dark);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;writing-mode:vertical-rl;transform:rotate(180deg);}
+
+/* ── Ticker ──────────────────────────────────────────────────────── */
+#ticker{position:absolute;bottom:0;left:0;right:0;height:52px;z-index:50;background:rgba(0,9,25,0.9);border-top:2px solid var(--primary);display:flex;align-items:center;overflow:hidden;}
+.ticker-label{background:var(--primary);color:var(--dark);font-size:16px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;padding:0 18px;height:100%;display:flex;align-items:center;flex-shrink:0;white-space:nowrap;}
+.ticker-track{flex:1;overflow:hidden;height:100%;display:flex;align-items:center;}
+.ticker-inner{display:flex;align-items:center;white-space:nowrap;animation:ticker-scroll linear infinite;}
+.ticker-item{font-size:19px;color:var(--white);padding:0 48px;}
+.ticker-sep{color:var(--primary);font-size:22px;}
+@keyframes ticker-scroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+/* ── Branding Bug ────────────────────────────────────────────────── */
+#brand-bug{position:absolute;z-index:60;bottom:60px;right:24px;background:rgba(10,22,40,0.75);border:1px solid rgba(0,180,216,0.4);border-radius:6px;padding:8px 16px;backdrop-filter:blur(6px);pointer-events:none;display:flex;align-items:center;gap:8px;}
+#brand-bug span{color:var(--primary);font-size:18px;font-weight:700;letter-spacing:.08em;vertical-align:middle;}
+.live-dot{display:inline-block;width:8px;height:8px;background:#ff3b3b;border-radius:50%;margin-right:4px;animation:blink 1.4s ease-in-out infinite;flex-shrink:0;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ── Clock ───────────────────────────────────────────────────────── */
+#clock{position:absolute;top:20px;right:24px;z-index:60;color:rgba(255,255,255,.7);font-size:22px;font-weight:300;letter-spacing:.06em;pointer-events:none;}
+#scene-nav{position:absolute;bottom:60px;left:24px;z-index:60;color:rgba(255,255,255,.3);font-size:13px;pointer-events:none;}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<img id="scene-bg-img" src="" alt="" />
+
+<!-- Corner frame decorations -->
+<div class="corner-frame corner-tl"></div>
+<div class="corner-frame corner-tr"></div>
+<div class="corner-frame corner-bl"></div>
+<div class="corner-frame corner-br"></div>
+
+<!-- Side panels -->
+<div id="side-panel-left">
+  <div class="scan-line"></div>
+  <div class="scan-line"></div>
+  <div class="scan-line"></div>
+</div>
+<div id="side-panel-right">
+  <div class="scan-line"></div>
+  <div class="scan-line"></div>
+</div>
+
+<!-- Camera zone glow frame -->
+<div id="cam-zone"></div>
+
+<!-- Info panel (talking head right side) -->
+<div id="info-panel">
+  <div class="ip-logo" id="ip-logo-text">civicresilience.net</div>
+  <div class="ip-stat">
+    <div class="ip-stat-label">Live Broadcast</div>
+    <div class="ip-stat-value" id="ip-clock">10:00 AM</div>
+  </div>
+  <div class="ip-divider"></div>
+  <div class="ip-bar-wrap"><div class="ip-bar-label">CIVIC ENGAGEMENT</div><div class="ip-bar"><div class="ip-bar-fill" style="width:78%;animation-delay:0s"></div></div></div>
+  <div class="ip-bar-wrap"><div class="ip-bar-label">COMMUNITY REACH</div><div class="ip-bar"><div class="ip-bar-fill" style="width:62%;animation-delay:.5s"></div></div></div>
+  <div class="ip-bar-wrap"><div class="ip-bar-label">ACTIVE LISTENERS</div><div class="ip-bar"><div class="ip-bar-fill" style="width:91%;animation-delay:1s"></div></div></div>
+  <div class="ip-feed" id="ip-feed"></div>
+</div>
+
+<!-- BRB Overlay -->
+<div id="brb-overlay">
+  <h2 id="brb-title">Be Right Back</h2>
+  <p id="brb-sub">civicresilience.net</p>
+  <div class="brb-bar"><div class="brb-bar-fill"></div></div>
+</div>
+
+<!-- Scene wrapper -->
+<div id="scene-wrap" class="fade-in"></div>
+
+<!-- Standby title -->
+<div id="standby-title">
+  <h1 id="standby-h1">Civic Resilience Network</h1>
+  <div class="title-line"></div>
+  <p id="standby-sub">Live Broadcast</p>
+  <div class="domain">civicresilience.net</div>
+</div>
+
+<!-- Lower third -->
+<div id="lower-third">
+  <div class="lt-accent-bar"></div>
+  <div class="lt-body">
+    <div class="lt-name" id="lt-name">Speaker Name</div>
+    <div class="lt-title" id="lt-title">Title / Organization</div>
+  </div>
+  <div class="lt-logo-end"><span>LIVE</span></div>
+</div>
+
+<!-- Ticker -->
+<div id="ticker">
+  <div class="ticker-label">LIVE</div>
+  <div class="ticker-track"><div class="ticker-inner" id="ticker-inner"></div></div>
+</div>
+
+<!-- Branding bug -->
+<div id="brand-bug">
+  <span class="live-dot"></span>
+  <img id="brand-logo" src="./img/logo.png" alt="Civic Resilience Network"
+    style="height:38px;width:auto;vertical-align:middle;display:inline-block;"
+    onerror="this.style.display='none';document.getElementById('brand-text').style.display='inline'" />
+  <span id="brand-text" style="display:none">civicresilience.net</span>
+</div>
+
+<!-- Clock -->
+<div id="clock"></div>
+<div id="scene-nav"></div>
+
+<script>
+const CONFIG_URL='./scenes.json';
+let CONFIG=null,currentSceneIdx=0,lowerThirdQueue=[],ltTimer=null,autoTimer=null;
+
+async function loadConfig(){
+  try{const r=await fetch(CONFIG_URL+'?_='+Date.now());CONFIG=await r.json();}
+  catch(e){CONFIG=getDefaultConfig();}
+  applySettings();initTicker();initClock();initInfoPanel();gotoScene(0);
+  if(CONFIG.settings.auto_advance)startAutoAdvance();
+}
+
+function getDefaultConfig(){return{settings:{default_transition:'fade',default_transition_ms:800,auto_advance:false,auto_advance_ms:10000,brand_color_primary:'#00b4d8',brand_color_secondary:'#1a3a5c',show_ticker:true,show_logo:true,show_clock:true,show_corner_frames:true,show_side_panels:true,logo_text:'civicresilience.net'},ticker_items:['Civic Resilience Network — Live','civicresilience.net'],scenes:[{id:'standby',name:'Standby',layout:'fullscreen-bg',transition:'fade',show_title:true,title:'Civic Resilience Network',subtitle:'Live Broadcast',images:[]}],lower_thirds:[]};}
+
+function applySettings(){
+  const s=CONFIG.settings;
+  const r=document.documentElement.style;
+  r.setProperty('--primary',s.brand_color_primary||'#00b4d8');
+  r.setProperty('--secondary',s.brand_color_secondary||'#1a3a5c');
+  r.setProperty('--trans-ms',(s.default_transition_ms||800)+'ms');
+  document.getElementById('brand-text').textContent=s.logo_text||'civicresilience.net';
+  document.getElementById('ip-logo-text').textContent=s.logo_text||'civicresilience.net';
+  document.getElementById('brand-bug').style.display=s.show_logo?'':'none';
+  document.getElementById('ticker').style.display=s.show_ticker?'':'none';
+  document.getElementById('clock').style.display=s.show_clock?'':'none';
+  // Corner frames
+  document.querySelectorAll('.corner-frame').forEach(el=>el.style.display=s.show_corner_frames!==false?'':'none');
+  // Side panels
+  document.getElementById('side-panel-left').style.display=s.show_side_panels!==false?'':'none';
+  document.getElementById('side-panel-right').style.display=s.show_side_panels!==false?'':'none';
+}
+
+function gotoScene(idx,transOverride){
+  if(!CONFIG||!CONFIG.scenes.length)return;
+  idx=((idx%CONFIG.scenes.length)+CONFIG.scenes.length)%CONFIG.scenes.length;
+  currentSceneIdx=idx;
+  const scene=CONFIG.scenes[idx];
+  const trans=transOverride||scene.transition||CONFIG.settings.default_transition||'fade';
+  const wrap=document.getElementById('scene-wrap');
+  const standby=document.getElementById('standby-title');
+  const infoPanel=document.getElementById('info-panel');
+  const camZone=document.getElementById('cam-zone');
+  const brbOverlay=document.getElementById('brb-overlay');
+
+  wrap.classList.remove('fade-in','slide-in','zoom-in');
+  wrap.classList.add(trans==='slide-up'?'slide-out':trans==='zoom-in'?'zoom-out':'fade-out');
+
+  setTimeout(()=>{
+    renderScene(scene,wrap);
+    wrap.classList.remove('fade-out','slide-out','zoom-out');
+    wrap.classList.add(trans==='slide-up'?'slide-in':trans==='zoom-in'?'zoom-in':'fade-in');
+
+    const isStandby=scene.layout==='fullscreen-bg';
+    standby.classList.toggle('visible',isStandby&&scene.show_title!==false);
+    if(isStandby){
+      document.getElementById('standby-h1').textContent=scene.title||'Civic Resilience Network';
+      document.getElementById('standby-sub').textContent=scene.subtitle||'Live Broadcast';
+    }
+
+    // Info panel: show for talking-head layout
+    const isTalking=scene.layout==='talking-head';
+    infoPanel.style.display=isTalking?'flex':'none';
+
+    // Camera zone glow
+    if(scene.cam_zone){
+      const cz=scene.cam_zone;
+      camZone.style.display='block';
+      camZone.style.left=cz.left||'0';
+      camZone.style.top=cz.top||'0';
+      camZone.style.width=cz.width||'100%';
+      camZone.style.height=cz.height||'calc(100% - 52px)';
+    } else {
+      camZone.style.display='none';
+    }
+
+    // BRB overlay
+    const isBrb=scene.layout==='brb';
+    brbOverlay.classList.toggle('visible',isBrb);
+    if(isBrb){
+      document.getElementById('brb-title').textContent=scene.brb_text||'Be Right Back';
+      document.getElementById('brb-sub').textContent=scene.brb_sub||'civicresilience.net';
+    }
+
+    document.getElementById('scene-nav').textContent=`Scene ${idx+1}/${CONFIG.scenes.length}: ${scene.name}`;
+  },CONFIG.settings.default_transition_ms||800);
+}
+
+function renderScene(scene,wrap){
+  wrap.innerHTML='';
+  wrap.className=`layout-${scene.layout}`;
+  // Background image for fullscreen-bg / brb scenes
+  const bgEl=document.getElementById('scene-bg-img');
+  if(scene.background){
+    bgEl.src=scene.background;bgEl.style.display='block';
+  } else {
+    bgEl.style.display='none';
+  }
+  (scene.images||[]).forEach(img=>{
+    const div=document.createElement('div');
+    div.className='image-area';
+    if(img.src){const im=document.createElement('img');im.src=img.src;im.alt=img.label||'';div.appendChild(im);}
+    if(img.label){const lbl=document.createElement('div');lbl.className='img-label';lbl.textContent=img.label;div.appendChild(lbl);}
+    wrap.appendChild(div);
+  });
+}
+
+function startAutoAdvance(){
+  if(autoTimer)clearInterval(autoTimer);
+  autoTimer=setInterval(()=>gotoScene(currentSceneIdx+1),CONFIG.settings.auto_advance_ms||10000);
+}
+
+function showLowerThird(name,title,dur){
+  const el=document.getElementById('lower-third');
+  document.getElementById('lt-name').textContent=name;
+  document.getElementById('lt-title').textContent=title;
+  el.classList.add('visible');
+  if(ltTimer)clearTimeout(ltTimer);
+  ltTimer=setTimeout(()=>el.classList.remove('visible'),dur||5000);
+}
+
+function queueLowerThirds(items){
+  lowerThirdQueue=[...(items||[])];
+  runLtQueue();
+}
+function runLtQueue(){
+  if(!lowerThirdQueue.length)return;
+  const lt=lowerThirdQueue.shift();
+  showLowerThird(lt.name,lt.title,lt.duration_ms||5000);
+  setTimeout(runLtQueue,(lt.duration_ms||5000)+1200);
+}
+
+function initTicker(){
+  const items=CONFIG.ticker_items||['civicresilience.net — Live'];
+  const inner=document.getElementById('ticker-inner');
+  const all=[...items,...items];
+  inner.innerHTML=all.map(t=>`<span class="ticker-item">${t}</span><span class="ticker-sep">◆</span>`).join('');
+  inner.style.animationDuration=Math.max(20,items.join('').length*0.22)+'s';
+}
+
+function initClock(){
+  const el=document.getElementById('clock');
+  const ipClock=document.getElementById('ip-clock');
+  function tick(){
+    const t=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+    el.textContent=t;
+    if(ipClock)ipClock.textContent=t;
+  }
+  tick();setInterval(tick,1000);
+}
+
+function initInfoPanel(){
+  const items=CONFIG.info_feed||['Civic engagement is democracy in action','Community voices matter — civicresilience.net','Stay informed. Stay engaged.','Building resilient communities together'];
+  const feed=document.getElementById('ip-feed');
+  feed.innerHTML=items.map(i=>`<div class="ip-feed-item"><div class="ip-feed-dot"></div>${i}</div>`).join('');
+}
+
+// Add tick marks to side panels
+function initSidePanels(){
+  ['side-panel-left','side-panel-right'].forEach(id=>{
+    const p=document.getElementById(id);
+    for(let i=0;i<20;i++){
+      const t=document.createElement('div');
+      t.className='tick';
+      t.style.top=(i*56+28)+'px';
+      t.style.opacity=(0.1+Math.random()*0.3).toFixed(2);
+      t.style.width=(i%5===0?16:8)+'px';
+      p.appendChild(t);
+    }
+  });
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' ')gotoScene(currentSceneIdx+1);
+  if(e.key==='ArrowLeft')gotoScene(currentSceneIdx-1);
+  if(e.key>='1'&&e.key<='9')gotoScene(parseInt(e.key)-1);
+  if(e.key==='l')queueLowerThirds(CONFIG.lower_thirds||[]);
+  if(e.key==='r')loadConfig();
+  if(e.key==='b'){const brb=document.getElementById('brb-overlay');brb.classList.toggle('visible');}
+});
+
+window.addEventListener('hashchange',checkHash);
+function checkHash(){
+  const hash=window.location.hash.slice(1);
+  if(!hash||!CONFIG)return;
+  const p=Object.fromEntries(hash.split('&').map(x=>x.split('=')));
+  if(p.scene!==undefined)gotoScene(parseInt(p.scene)-1);
+  if(p.lt){const[name,title]=decodeURIComponent(p.lt).split('|');showLowerThird(name,title||'',6000);}
+  if(p.reload)loadConfig();
+}
+
+// Particle background
+(function(){
+  const canvas=document.getElementById('bg-canvas');
+  const ctx=canvas.getContext('2d');
+  canvas.width=1920;canvas.height=1080;
+  const NUM=90,MAX_DIST=200;
+  const P=[0,180,216];
+  function drawBg(){
+    const g=ctx.createRadialGradient(960,540,0,960,540,900);
+    g.addColorStop(0,'#0d2137');g.addColorStop(.6,'#091929');g.addColorStop(1,'#040d14');
+    ctx.fillStyle=g;ctx.fillRect(0,0,1920,1080);
+  }
+  let hexImg=null;
+  function drawHexGrid(){
+    if(!hexImg){
+      const oc=document.createElement('canvas');oc.width=1920;oc.height=1080;
+      const ox=oc.getContext('2d');
+      ox.strokeStyle='rgba(0,180,216,0.04)';ox.lineWidth=1;
+      const sz=60,h=sz*Math.sqrt(3);
+      for(let row=-1;row<1080/h+1;row++)for(let col=-1;col<1920/(sz*1.5)+1;col++){
+        const x=col*sz*1.5,y=row*h+(col%2===0?0:h/2);
+        ox.beginPath();
+        for(let i=0;i<6;i++){const a=Math.PI/180*(60*i-30);ox.lineTo(x+sz*Math.cos(a),y+sz*Math.sin(a));}
+        ox.closePath();ox.stroke();
+      }
+      hexImg=oc;
+    }
+    ctx.drawImage(hexImg,0,0);
+  }
+  const parts=Array.from({length:NUM},()=>({x:Math.random()*1920,y:Math.random()*1080,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5,r:1.5+Math.random()*2.5,alpha:.4+Math.random()*.6,pulse:Math.random()*Math.PI*2}));
+  function drawParts(ts){
+    parts.forEach(p=>{
+      p.pulse+=.018;
+      const a=p.alpha*(.6+.4*Math.sin(p.pulse));
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${P[0]},${P[1]},${P[2]},${a})`;ctx.fill();
+    });
+  }
+  function drawLinks(){
+    for(let i=0;i<parts.length;i++)for(let j=i+1;j<parts.length;j++){
+      const dx=parts[i].x-parts[j].x,dy=parts[i].y-parts[j].y;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<MAX_DIST){
+        ctx.beginPath();ctx.moveTo(parts[i].x,parts[i].y);ctx.lineTo(parts[j].x,parts[j].y);
+        ctx.strokeStyle=`rgba(${P[0]},${P[1]},${P[2]},${(1-d/MAX_DIST)*.22})`;
+        ctx.lineWidth=.8;ctx.stroke();
+      }
+    }
+  }
+  function moveParts(){parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=1920;if(p.x>1920)p.x=0;if(p.y<0)p.y=1080;if(p.y>1080)p.y=0;});}
+  function drawWaves(t){
+    ctx.save();ctx.globalAlpha=.06;
+    for(let w=0;w<3;w++){
+      ctx.beginPath();
+      const yb=200+w*340;
+      for(let x=0;x<=1920;x+=8){const y=yb+Math.sin(x/280+t*.0008+w*1.2)*40+Math.sin(x/120+t*.0015+w*.7)*18;x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+      ctx.strokeStyle=`rgba(${P[0]},${P[1]},${P[2]},1)`;ctx.lineWidth=1.5;ctx.stroke();
+    }
+    ctx.restore();
+  }
+  let frame=0;
+  function animate(ts){
+    frame++;ctx.clearRect(0,0,1920,1080);
+    drawBg();
+    if(frame===1)drawHexGrid();
+    else if(frame%120===0)drawHexGrid();
+    drawWaves(ts);drawLinks();drawParts(ts);moveParts();
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+})();
+
+initSidePanels();
+loadConfig().then(checkHash);
+setInterval(()=>{if(CONFIG)initTicker();},30000);
+</script>
+</body>
+</html>
