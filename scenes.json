@@ -1,5 +1,5 @@
 {
-  "_doc": "Edit this file to configure your OBS scenes. Reload the browser source in OBS to apply changes.",
+  "_doc": "Overlay provides lower-third, news ticker, and standby animated background. Video sources are managed in OBS directly.",
   "settings": {
     "default_transition": "fade",
     "default_transition_ms": 800,
@@ -15,9 +15,9 @@
     "logo_position": "bottom-right"
   },
   "ticker_items": [
-    "Welcome to Civic Resilience Network — Live",
+    "Welcome to Civic Resilience Network \u2014 Live",
     "Building community strength through civic engagement",
-    "civicresilience.net — Join the conversation"
+    "civicresilience.net \u2014 Join the conversation"
   ],
   "scenes": [
     {
@@ -29,73 +29,18 @@
       "title": "Civic Resilience Network",
       "subtitle": "Live Broadcast",
       "images": []
-    },
-    {
-      "id": "single",
-      "name": "Single Image Full",
-      "layout": "fullscreen",
-      "transition": "fade",
-      "images": [
-        { "src": "img/placeholder-1.jpg", "label": "", "size": 100 }
-      ]
-    },
-    {
-      "id": "split2",
-      "name": "Two Images Side by Side",
-      "layout": "grid-2",
-      "transition": "slide-up",
-      "images": [
-        { "src": "img/placeholder-1.jpg", "label": "Community Meeting", "size": 50 },
-        { "src": "img/placeholder-2.jpg", "label": "City Council",       "size": 50 }
-      ]
-    },
-    {
-      "id": "split3",
-      "name": "Three Images (Large + Two Small)",
-      "layout": "grid-3",
-      "transition": "slide-up",
-      "images": [
-        { "src": "img/placeholder-1.jpg", "label": "Main Event",     "size": 60 },
-        { "src": "img/placeholder-2.jpg", "label": "Panel Speaker",  "size": 20 },
-        { "src": "img/placeholder-3.jpg", "label": "Audience",       "size": 20 }
-      ]
-    },
-    {
-      "id": "split4",
-      "name": "Four Images Grid",
-      "layout": "grid-4",
-      "transition": "zoom-in",
-      "images": [
-        { "src": "img/placeholder-1.jpg", "label": "Speaker 1", "size": 25 },
-        { "src": "img/placeholder-2.jpg", "label": "Speaker 2", "size": 25 },
-        { "src": "img/placeholder-3.jpg", "label": "Speaker 3", "size": 25 },
-        { "src": "img/placeholder-4.jpg", "label": "Speaker 4", "size": 25 }
-      ]
-    },
-    {
-      "id": "sidebar",
-      "name": "Large Left + Right Info Panel",
-      "layout": "sidebar-r",
-      "transition": "slide-left",
-      "images": [
-        { "src": "img/placeholder-1.jpg", "label": "Live Feed", "size": 70 },
-        { "src": "img/placeholder-2.jpg", "label": "Details",   "size": 30 }
-      ]
-    },
-    {
-      "id": "pip",
-      "name": "Full BG + Picture-in-Picture",
-      "layout": "pip",
-      "pip_position": "bottom-right",
-      "transition": "fade",
-      "images": [
-        { "src": "img/placeholder-1.jpg", "label": "Main",    "size": 100 },
-        { "src": "img/placeholder-2.jpg", "label": "Speaker", "size": 25  }
-      ]
     }
   ],
   "lower_thirds": [
-    { "name": "James Flanagano", "title": "Civic Resilience Network", "duration_ms": 5000 },
-    { "name": "Guest Speaker",   "title": "Community Advocate",       "duration_ms": 5000 }
+    {
+      "name": "James Flanagano",
+      "title": "Civic Resilience Network",
+      "duration_ms": 5000
+    },
+    {
+      "name": "Guest Speaker",
+      "title": "Community Advocate",
+      "duration_ms": 5000
+    }
   ]
 }
