@@ -2,687 +2,701 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1920">
-<title>Civic Resilience Network — OBS Overlay</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Civic Resilience Network — Informed. Engaged. Resilient.</title>
+<meta name="description" content="Independent news intelligence — see who's covering what, who owns your news, and where the blindspots are.">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
-/* ── Reset & Base ────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body {
-  width: 1920px; height: 1080px; overflow: hidden;
-  background: transparent;
-  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0a1628;--navy2:#0f1f38;--navy3:#1a3a5c;
+  --teal:#00b4d8;--teal2:#48cae4;--teal3:#90e0ef;
+  --white:#f8fafc;--muted:#94a3b8;--border:rgba(0,180,216,.18);
+  --left:#3b82f6;--lean-left:#93c5fd;--center:#22c55e;
+  --lean-right:#fca5a5;--right:#ef4444;--far:#7c3aed;
 }
+html{scroll-behavior:smooth}
+body{background:var(--navy);color:var(--white);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+a{color:var(--teal);text-decoration:none}
+a:hover{color:var(--teal2)}
+button{cursor:pointer;border:none;outline:none}
+input{outline:none}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--navy)}
+::-webkit-scrollbar-thumb{background:var(--navy3);border-radius:3px}
 
-/* ── CSS Variables (overridden from scenes.json settings) ────────── */
-:root {
-  --primary:   #00b4d8;
-  --secondary: #1a3a5c;
-  --accent:    #48cae4;
-  --white:     #ffffff;
-  --dark:      #0a1628;
-  --trans-ms:  800ms;
-  --glow: 0 0 20px rgba(0,180,216,0.4);
-}
+/* Layout */
+.container{max-width:1200px;margin:0 auto;padding:0 20px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 
-/* ── Animated Particle Background ───────────────────────────────── */
-#bg-canvas {
-  position: absolute; inset: 0;
-  width: 1920px; height: 1080px;
-  z-index: 0;
-}
+/* Nav */
+nav{position:sticky;top:0;z-index:100;background:rgba(10,22,40,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;max-width:1200px;margin:0 auto;padding:0 20px}
+.nav-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:.04em}
+.nav-logo .dot{width:8px;height:8px;border-radius:50%;background:#ef4444;animation:blink 1.4s ease-in-out infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.nav-links{display:flex;gap:28px;font-size:14px;font-weight:500}
+.nav-links a{color:var(--muted);transition:color .2s}
+.nav-links a:hover,.nav-links a.active{color:var(--teal)}
+.nav-cta{background:var(--teal);color:var(--navy);padding:8px 18px;border-radius:6px;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.nav-cta:hover{background:var(--teal2);color:var(--navy)}
 
-/* ── Scene Container ─────────────────────────────────────────────── */
-#scene-wrap {
-  position: absolute; inset: 0;
-  z-index: 10;
-  transition: opacity var(--trans-ms) ease, transform var(--trans-ms) ease;
-}
-#scene-wrap.fade-out   { opacity: 0; }
-#scene-wrap.fade-in    { opacity: 1; }
-#scene-wrap.slide-out  { transform: translateY(-40px); opacity: 0; }
-#scene-wrap.slide-in   { transform: translateY(0);     opacity: 1; }
-#scene-wrap.zoom-out   { transform: scale(1.04);        opacity: 0; }
-#scene-wrap.zoom-in    { transform: scale(1);           opacity: 1; }
+/* Hero */
+.hero{padding:80px 0 60px;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(0,180,216,.12) 0%,transparent 70%)}
+.hero-eyebrow{font-size:12px;font-weight:700;letter-spacing:.2em;color:var(--teal);text-transform:uppercase;margin-bottom:16px}
+.hero h1{font-size:clamp(36px,5vw,64px);font-weight:900;line-height:1.1;letter-spacing:-.02em;margin-bottom:20px}
+.hero h1 span{color:var(--teal)}
+.hero-sub{font-size:18px;color:var(--muted);max-width:600px;margin:0 auto 36px;line-height:1.6}
+.hero-stats{display:flex;justify-content:center;gap:48px;margin-top:40px;padding-top:40px;border-top:1px solid var(--border)}
+.stat-val{font-size:32px;font-weight:800;color:var(--teal)}
+.stat-lbl{font-size:12px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:4px}
 
-/* ── Image Grid Layouts ──────────────────────────────────────────── */
-.image-area {
-  position: absolute;
-  overflow: hidden;
-  transition: all var(--trans-ms) ease;
-}
-.image-area img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.img-label {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  padding: 8px 14px;
-  background: linear-gradient(transparent, rgba(0,0,0,0.72));
-  color: var(--white); font-size: 22px; font-weight: 500;
-  letter-spacing: 0.02em;
-}
+/* Section titles */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.section-title{font-size:22px;font-weight:800;display:flex;align-items:center;gap:10px}
+.section-title::before{content:'';display:block;width:4px;height:24px;background:var(--teal);border-radius:2px}
+.section-tag{background:var(--navy3);color:var(--teal);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:.1em;text-transform:uppercase}
 
-/* fullscreen-bg: standby with animated background only */
-.layout-fullscreen-bg .image-area { display: none; }
+/* Bias meter */
+.bias-track{height:6px;border-radius:3px;background:linear-gradient(90deg,#7c3aed,#3b82f6,#93c5fd,#22c55e,#fca5a5,#ef4444,#7c3aed);position:relative;margin:6px 0}
+.bias-thumb{position:absolute;top:50%;width:12px;height:12px;border-radius:50%;border:2px solid var(--white);transform:translate(-50%,-50%);transition:left .4s ease}
+.bias-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.bias-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap}
+.b-far_left{background:rgba(124,58,237,.2);color:#a78bfa}
+.b-left{background:rgba(59,130,246,.2);color:#93c5fd}
+.b-lean_left{background:rgba(147,197,253,.2);color:#bfdbfe}
+.b-center{background:rgba(34,197,94,.2);color:#86efac}
+.b-lean_right{background:rgba(252,165,165,.2);color:#fca5a5}
+.b-right{background:rgba(239,68,68,.2);color:#fca5a5}
+.b-far_right{background:rgba(124,58,237,.2);color:#a78bfa}
 
-/* fullscreen: one image fills the scene */
-.layout-fullscreen .image-area:nth-child(1) {
-  inset: 0;
-}
+/* Coverage bar */
+.coverage-bar{display:flex;height:4px;border-radius:2px;overflow:hidden;gap:2px;margin:8px 0}
+.cov-seg{border-radius:2px;transition:width .4s}
+.cov-left{background:var(--left)}
+.cov-center{background:var(--center)}
+.cov-right{background:var(--right)}
 
-/* grid-2: two equal side by side */
-.layout-grid-2 .image-area:nth-child(1) { top:0; left:0;    width:960px;  height:1080px; }
-.layout-grid-2 .image-area:nth-child(2) { top:0; left:960px; width:960px; height:1080px; }
-.layout-grid-2 .image-area { border-right: 2px solid var(--primary); }
+/* News cards */
+.news-grid{display:flex;flex-direction:column;gap:12px}
+.news-card{background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:20px;transition:border-color .2s,transform .15s}
+.news-card:hover{border-color:var(--teal);transform:translateY(-1px)}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:12px}
+.card-headline{font-size:17px;font-weight:700;line-height:1.35;flex:1}
+.card-headline a{color:var(--white)}
+.card-headline a:hover{color:var(--teal)}
+.card-meta{display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap}
+.source-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.source-chip .owner{font-size:11px;color:rgba(148,163,184,.6)}
+.coverage-count{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px}
+.coverage-count strong{color:var(--teal)}
+.blindspot-flag{display:inline-flex;align-items:center;gap:4px;background:rgba(245,158,11,.12);color:#fbbf24;font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;letter-spacing:.06em}
+.card-description{font-size:14px;color:var(--muted);line-height:1.5;margin-top:8px}
+.card-img{width:100px;height:70px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--navy3)}
+.factuality{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px}
+.f-very_high{background:rgba(34,197,94,.15);color:#86efac}
+.f-high{background:rgba(34,197,94,.1);color:#a7f3d0}
+.f-mixed{background:rgba(245,158,11,.12);color:#fcd34d}
+.f-low,.f-very_low{background:rgba(239,68,68,.12);color:#fca5a5}
 
-/* grid-3: large left + two stacked right */
-.layout-grid-3 .image-area:nth-child(1) { top:0;    left:0;    width:1152px; height:1080px; }
-.layout-grid-3 .image-area:nth-child(2) { top:0;    left:1152px; width:768px; height:540px; }
-.layout-grid-3 .image-area:nth-child(3) { top:540px; left:1152px; width:768px; height:540px; }
-.layout-grid-3 .image-area { border: 1px solid rgba(0,180,216,0.3); }
+/* Topic filter */
+.topic-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.topic-btn{padding:7px 16px;border-radius:20px;font-size:13px;font-weight:600;background:var(--navy2);color:var(--muted);border:1px solid var(--border);transition:all .2s}
+.topic-btn:hover,.topic-btn.active{background:var(--teal);color:var(--navy);border-color:var(--teal)}
 
-/* grid-4: 2x2 */
-.layout-grid-4 .image-area:nth-child(1) { top:0;    left:0;    width:960px; height:540px; }
-.layout-grid-4 .image-area:nth-child(2) { top:0;    left:960px; width:960px; height:540px; }
-.layout-grid-4 .image-area:nth-child(3) { top:540px; left:0;   width:960px; height:540px; }
-.layout-grid-4 .image-area:nth-child(4) { top:540px; left:960px; width:960px; height:540px; }
-.layout-grid-4 .image-area { border: 1px solid rgba(0,180,216,0.25); }
+/* Sidebar */
+.sidebar{display:flex;flex-direction:column;gap:20px}
+.widget{background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:20px}
+.widget-title{font-size:14px;font-weight:800;color:var(--teal);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px}
 
-/* sidebar-r: 70% left + 30% right */
-.layout-sidebar-r .image-area:nth-child(1) { top:0; left:0;     width:1344px; height:1080px; }
-.layout-sidebar-r .image-area:nth-child(2) { top:0; left:1344px; width:576px;  height:1080px; }
-.layout-sidebar-r .image-area:nth-child(2) {
-  border-left: 3px solid var(--primary);
-  display: flex; flex-direction: column;
-  justify-content: center; align-items: center;
-  background: var(--secondary);
-}
+/* Source list */
+.source-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.source-row:last-child{border-bottom:none}
+.source-name{font-size:13px;font-weight:600}
+.source-owner-sm{font-size:11px;color:var(--muted);margin-top:1px}
 
-/* pip: full + small corner */
-.layout-pip .image-area:nth-child(1) { inset: 0; }
-.layout-pip .image-area:nth-child(2) {
-  bottom: 120px; right: 30px; top: auto; left: auto;
-  width: 420px; height: 236px;
-  border: 3px solid var(--primary);
-  box-shadow: var(--glow);
-  z-index: 20;
-}
+/* Newsletter section */
+.newsletter-section{padding:80px 0;background:linear-gradient(180deg,transparent,rgba(0,180,216,.06),transparent)}
+.nl-card{background:var(--navy2);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;max-width:600px;margin:0 auto}
+.nl-card h2{font-size:28px;font-weight:800;margin-bottom:12px}
+.nl-card p{color:var(--muted);margin-bottom:28px;line-height:1.6}
+.nl-form{display:flex;gap:10px;max-width:420px;margin:0 auto}
+.nl-form input{flex:1;background:var(--navy3);border:1px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--white);font-size:14px}
+.nl-form input:focus{border-color:var(--teal)}
+.nl-form input::placeholder{color:var(--muted)}
+.nl-submit{background:var(--teal);color:var(--navy);padding:12px 20px;border-radius:8px;font-weight:700;font-size:14px;white-space:nowrap}
+.nl-submit:hover{background:var(--teal2)}
 
-/* ── Standby Title (fullscreen-bg) ───────────────────────────────── */
-#standby-title {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  z-index: 15; pointer-events: none;
-  opacity: 0; transition: opacity 1.2s ease;
-}
-#standby-title.visible { opacity: 1; }
-#standby-title h1 {
-  font-size: 82px; font-weight: 800; letter-spacing: 0.04em;
-  color: var(--white);
-  text-shadow: 0 0 60px rgba(0,180,216,0.6), 0 4px 24px rgba(0,0,0,0.5);
-  text-transform: uppercase;
-}
-#standby-title p {
-  margin-top: 14px; font-size: 32px; font-weight: 300;
-  color: var(--accent); letter-spacing: 0.18em; text-transform: uppercase;
-}
-#standby-title .domain {
-  margin-top: 24px; font-size: 22px; color: rgba(255,255,255,0.5);
-  letter-spacing: 0.12em;
-}
-.title-line {
-  width: 240px; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--primary), transparent);
-  margin: 18px 0;
-  animation: line-pulse 3s ease-in-out infinite;
-}
-@keyframes line-pulse { 0%,100%{opacity:.4;width:160px} 50%{opacity:1;width:320px} }
+/* Civic tools */
+.civic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.civic-card{background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:24px;transition:border-color .2s}
+.civic-card:hover{border-color:var(--teal)}
+.civic-icon{font-size:28px;margin-bottom:12px}
+.civic-card h3{font-size:16px;font-weight:700;margin-bottom:8px}
+.civic-card p{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px}
+.civic-link{font-size:13px;color:var(--teal);font-weight:600;display:flex;align-items:center;gap:4px}
 
-/* ── Lower Third ─────────────────────────────────────────────────── */
-#lower-third {
-  position: absolute; bottom: 90px; left: 0; right: 0;
-  height: 88px; z-index: 50;
-  display: flex; align-items: stretch;
-  transform: translateY(120px); opacity: 0;
-  transition: transform 0.55s cubic-bezier(.22,1,.36,1), opacity 0.4s ease;
-  pointer-events: none;
-}
-#lower-third.visible {
-  transform: translateY(0); opacity: 1;
-}
-.lt-accent-bar {
-  width: 6px; background: var(--primary);
-  box-shadow: var(--glow);
-  flex-shrink: 0;
-}
-.lt-body {
-  background: rgba(10,22,40,0.88);
-  backdrop-filter: blur(8px);
-  padding: 0 28px;
-  display: flex; flex-direction: column; justify-content: center;
-  border-top: 1px solid rgba(0,180,216,0.3);
-  border-bottom: 1px solid rgba(0,180,216,0.3);
-  flex: 1;
-}
-.lt-name  { font-size: 34px; font-weight: 700; color: var(--white); line-height: 1.15; }
-.lt-title { font-size: 20px; font-weight: 400; color: var(--primary); margin-top: 2px; }
-.lt-logo-end {
-  width: 180px; background: var(--primary);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.lt-logo-end span {
-  color: var(--dark); font-size: 13px; font-weight: 800;
-  text-transform: uppercase; letter-spacing: 0.08em;
-  writing-mode: vertical-rl; text-orientation: mixed;
-  transform: rotate(180deg);
-}
+/* Ownership breakdown */
+.ownership-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.ownership-row:last-child{border-bottom:none}
+.own-bar-wrap{flex:1;height:4px;background:var(--navy3);border-radius:2px;overflow:hidden}
+.own-bar{height:100%;background:var(--teal);border-radius:2px}
+.own-label{font-size:12px;color:var(--muted);width:130px;text-transform:capitalize}
+.own-pct{font-size:12px;color:var(--white);font-weight:600;width:36px;text-align:right}
 
-/* ── News Ticker ─────────────────────────────────────────────────── */
-#ticker {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  height: 52px; z-index: 50;
-  background: rgba(0,9,25,0.9);
-  border-top: 2px solid var(--primary);
-  display: flex; align-items: center;
-  overflow: hidden;
-}
-.ticker-label {
-  background: var(--primary);
-  color: var(--dark);
-  font-size: 16px; font-weight: 900;
-  text-transform: uppercase; letter-spacing: 0.12em;
-  padding: 0 18px; height: 100%;
-  display: flex; align-items: center;
-  flex-shrink: 0; white-space: nowrap;
-}
-.ticker-track {
-  flex: 1; overflow: hidden; height: 100%;
-  display: flex; align-items: center;
-}
-.ticker-inner {
-  display: flex; align-items: center;
-  white-space: nowrap;
-  animation: ticker-scroll linear infinite;
-}
-.ticker-item {
-  font-size: 19px; color: var(--white);
-  padding: 0 48px;
-}
-.ticker-sep {
-  color: var(--primary); font-size: 22px; font-weight: 300;
-}
-@keyframes ticker-scroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
+/* Loading spinner */
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:60px;color:var(--muted);font-size:14px}
 
-/* ── Branding Bug (corner) ───────────────────────────────────────── */
-#brand-bug {
-  position: absolute; z-index: 60;
-  bottom: 60px; right: 24px;
-  background: rgba(10,22,40,0.75);
-  border: 1px solid rgba(0,180,216,0.4);
-  border-radius: 6px;
-  padding: 8px 16px;
-  backdrop-filter: blur(6px);
-  pointer-events: none;
-}
-#brand-bug span {
-  color: var(--primary); font-size: 18px; font-weight: 700;
-  letter-spacing: 0.08em; vertical-align: middle;
-}
-#brand-bug { display: flex; align-items: center; gap: 8px; }
-#brand-bug .live-dot {
-  display: inline-block; width: 8px; height: 8px;
-  background: #ff3b3b; border-radius: 50%;
-  margin-right: 8px;
-  animation: blink 1.4s ease-in-out infinite;
-}
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+/* Footer */
+footer{background:var(--navy2);border-top:1px solid var(--border);padding:48px 0 24px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px;margin-bottom:40px}
+.footer-brand{font-size:20px;font-weight:800;margin-bottom:10px}
+.footer-desc{font-size:13px;color:var(--muted);line-height:1.6}
+.footer-col h4{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--teal);text-transform:uppercase;margin-bottom:14px}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.footer-col ul li a{font-size:13px;color:var(--muted)}
+.footer-col ul li a:hover{color:var(--white)}
+.footer-bottom{border-top:1px solid var(--border);padding-top:20px;display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
 
-/* ── Clock ───────────────────────────────────────────────────────── */
-#clock {
-  position: absolute; top: 20px; right: 24px; z-index: 60;
-  color: rgba(255,255,255,0.7);
-  font-size: 22px; font-weight: 300;
-  letter-spacing: 0.06em; pointer-events: none;
-}
-
-/* ── Scene Nav (keyboard / URL control) ──────────────────────────── */
-#scene-nav {
-  position: absolute; bottom: 60px; left: 24px; z-index: 60;
-  color: rgba(255,255,255,0.3);
-  font-size: 13px; pointer-events: none;
+/* Responsive */
+@media(max-width:768px){
+  .grid-2,.grid-3,.footer-grid{grid-template-columns:1fr}
+  .nav-links{display:none}
+  .hero{padding:48px 0 36px}
+  .hero-stats{flex-wrap:wrap;gap:24px}
 }
 </style>
 </head>
 <body>
+<div id="root"></div>
 
-<!-- Animated background canvas -->
-<canvas id="bg-canvas"></canvas>
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
 
-<!-- Scene wrapper -->
-<div id="scene-wrap" class="fade-in"></div>
+const API = 'https://api.civicresilience.net';
 
-<!-- Standby title (shown when layout is fullscreen-bg) -->
-<div id="standby-title">
-  <h1 id="standby-h1">Civic Resilience Network</h1>
-  <div class="title-line"></div>
-  <p id="standby-sub">Live Broadcast</p>
-  <div class="domain" id="standby-domain">civicresilience.net</div>
-</div>
+// Inline bias data from sources_db.json (subset of key sources)
+const SOURCES = {
+  'apnews.com':        {name:'AP News',        bias:'center',     bias_score:0,    factuality:'very_high', owner:'Associated Press (nonprofit)'},
+  'reuters.com':       {name:'Reuters',         bias:'center',     bias_score:0,    factuality:'very_high', owner:'Thomson Reuters'},
+  'bbc.com':           {name:'BBC News',         bias:'center',     bias_score:-.5,  factuality:'very_high', owner:'UK Public Broadcaster'},
+  'npr.org':           {name:'NPR',              bias:'lean_left',  bias_score:-1,   factuality:'very_high', owner:'NPR (nonprofit)'},
+  'nytimes.com':       {name:'New York Times',   bias:'lean_left',  bias_score:-1,   factuality:'very_high', owner:'NYT Company'},
+  'washingtonpost.com':{name:'Washington Post',  bias:'lean_left',  bias_score:-1.5, factuality:'high',      owner:'Jeff Bezos'},
+  'theguardian.com':   {name:'The Guardian',     bias:'lean_left',  bias_score:-1.5, factuality:'high',      owner:'Guardian Media Group'},
+  'politico.com':      {name:'Politico',          bias:'lean_left',  bias_score:-.5,  factuality:'high',      owner:'Axel Springer'},
+  'thehill.com':       {name:'The Hill',          bias:'center',     bias_score:0,    factuality:'high',      owner:'Nexstar Media'},
+  'axios.com':         {name:'Axios',             bias:'center',     bias_score:-.5,  factuality:'high',      owner:'Cox Enterprises'},
+  'cnn.com':           {name:'CNN',               bias:'lean_left',  bias_score:-1.5, factuality:'high',      owner:'Warner Bros. Discovery'},
+  'foxnews.com':       {name:'Fox News',          bias:'right',      bias_score:2,    factuality:'mixed',     owner:'Fox Corp / Rupert Murdoch'},
+  'wsj.com':           {name:'Wall St. Journal',  bias:'lean_right', bias_score:1,    factuality:'very_high', owner:'News Corp / Murdoch'},
+  'bloomberg.com':     {name:'Bloomberg',         bias:'center',     bias_score:0,    factuality:'very_high', owner:'Michael Bloomberg'},
+  'propublica.org':    {name:'ProPublica',        bias:'lean_left',  bias_score:-1,   factuality:'very_high', owner:'ProPublica (nonprofit)'},
+  'nypost.com':        {name:'NY Post',           bias:'right',      bias_score:2,    factuality:'mixed',     owner:'News Corp / Murdoch'},
+  'newsweek.com':      {name:'Newsweek',          bias:'center',     bias_score:0,    factuality:'mixed',     owner:'Dev Pragad'},
+  'usatoday.com':      {name:'USA Today',         bias:'center',     bias_score:-.5,  factuality:'high',      owner:'Gannett'},
+  'nbcnews.com':       {name:'NBC News',          bias:'lean_left',  bias_score:-1,   factuality:'high',      owner:'NBCUniversal / Comcast'},
+  'cbsnews.com':       {name:'CBS News',          bias:'lean_left',  bias_score:-1,   factuality:'high',      owner:'Paramount Global'},
+  'abcnews.go.com':    {name:'ABC News',          bias:'lean_left',  bias_score:-1,   factuality:'high',      owner:'Walt Disney Company'},
+  'msnbc.com':         {name:'MSNBC',             bias:'left',       bias_score:-2,   factuality:'mixed',     owner:'NBCUniversal / Comcast'},
+  'breitbart.com':     {name:'Breitbart',         bias:'far_right',  bias_score:3,    factuality:'low',       owner:'Robert Shillman'},
+  'dailywire.com':     {name:'Daily Wire',        bias:'right',      bias_score:2.5,  factuality:'mixed',     owner:'Ben Shapiro / Jeremy Boreing'},
+  'theatlantic.com':   {name:'The Atlantic',      bias:'lean_left',  bias_score:-1,   factuality:'high',      owner:'Laurene Powell Jobs'},
+  'time.com':          {name:'TIME',              bias:'lean_left',  bias_score:-1,   factuality:'high',      owner:'Marc Benioff'},
+  'vox.com':           {name:'Vox',               bias:'left',       bias_score:-2,   factuality:'high',      owner:'Vox Media'},
+  'businessinsider.com':{name:'Business Insider', bias:'lean_left',  bias_score:-1,   factuality:'high',      owner:'Axel Springer'},
+  'wired.com':         {name:'Wired',             bias:'lean_left',  bias_score:-1,   factuality:'high',      owner:'Condé Nast'},
+  'latimes.com':       {name:'LA Times',          bias:'lean_left',  bias_score:-1,   factuality:'high',      owner:'Patrick Soon-Shiong'},
+};
 
-<!-- Lower third -->
-<div id="lower-third">
-  <div class="lt-accent-bar"></div>
-  <div class="lt-body">
-    <div class="lt-name"  id="lt-name">Speaker Name</div>
-    <div class="lt-title" id="lt-title">Title / Organization</div>
-  </div>
-  <div class="lt-logo-end"><span>LIVE</span></div>
-</div>
-
-<!-- Ticker -->
-<div id="ticker">
-  <div class="ticker-label">LIVE</div>
-  <div class="ticker-track">
-    <div class="ticker-inner" id="ticker-inner"></div>
-  </div>
-</div>
-
-<!-- Branding bug — shows logo if img/logo.png exists, falls back to text -->
-<div id="brand-bug">
-  <span class="live-dot"></span>
-  <img id="brand-logo" src="./img/logo.png"
-       alt="Civic Resilience Network"
-       style="height:38px; width:auto; vertical-align:middle; display:inline-block;"
-       onerror="this.style.display='none'; document.getElementById('brand-text').style.display='inline';" />
-  <span id="brand-text" style="display:none;"><span id="brand-text-inner">civicresilience.net</span></span>
-</div>
-
-<!-- Clock -->
-<div id="clock" id="clock-el"></div>
-
-<!-- Scene indicator -->
-<div id="scene-nav" id="scene-nav-el"></div>
-
-<script>
-// ─── Config loader ────────────────────────────────────────────────
-const CONFIG_URL = './scenes.json';
-let CONFIG = null;
-let currentSceneIdx = 0;
-let lowerThirdQueue = [];
-let lowerThirdTimer = null;
-
-async function loadConfig() {
+function getSourceInfo(url) {
   try {
-    const r = await fetch(CONFIG_URL + '?_=' + Date.now());
-    CONFIG = await r.json();
-  } catch(e) {
-    // Fallback inline config if fetch fails (local file:// in OBS)
-    CONFIG = {
-      settings: {
-        default_transition: 'fade', default_transition_ms: 800,
-        auto_advance: false, auto_advance_ms: 10000,
-        background_style: 'network',
-        brand_color_primary: '#00b4d8', brand_color_secondary: '#1a3a5c',
-        show_ticker: true, show_logo: true, show_clock: true,
-        logo_text: 'civicresilience.net', logo_position: 'bottom-right'
-      },
-      ticker_items: ['Civic Resilience Network — Live', 'civicresilience.net'],
-      scenes: [{
-        id: 'standby', name: 'Standby', layout: 'fullscreen-bg',
-        transition: 'fade', show_title: true,
-        title: 'Civic Resilience Network', subtitle: 'Live Broadcast', images: []
-      }],
-      lower_thirds: []
-    };
-  }
-  applySettings();
-  initTicker();
-  initClock();
-  gotoScene(0);
-  if (CONFIG.settings.auto_advance) startAutoAdvance();
+    const domain = new URL(url).hostname.replace('www.','');
+    return SOURCES[domain] || null;
+  } catch { return null; }
 }
 
-// ─── Apply global settings ────────────────────────────────────────
-function applySettings() {
-  const s = CONFIG.settings;
-  const r = document.documentElement.style;
-  r.setProperty('--primary',   s.brand_color_primary  || '#00b4d8');
-  r.setProperty('--secondary', s.brand_color_secondary || '#1a3a5c');
-  r.setProperty('--trans-ms',  (s.default_transition_ms || 800) + 'ms');
-  document.getElementById('brand-text').textContent = s.logo_text || 'civicresilience.net';
-  document.getElementById('brand-bug').style.display = s.show_logo ? '' : 'none';
-  document.getElementById('ticker').style.display    = s.show_ticker ? '' : 'none';
-  document.getElementById('clock').style.display     = s.show_clock ? '' : 'none';
-  // Logo position
-  const bug = document.getElementById('brand-bug');
-  const pos = s.logo_position || 'bottom-right';
-  bug.style.bottom = pos.includes('bottom') ? '60px' : 'auto';
-  bug.style.top    = pos.includes('top')    ? '20px' : 'auto';
-  bug.style.right  = pos.includes('right')  ? '24px' : 'auto';
-  bug.style.left   = pos.includes('left')   ? '24px' : 'auto';
+function biasToPercent(score) {
+  // score: -3 to +3 → 0% to 100%
+  return ((score + 3) / 6) * 100;
 }
 
-// ─── Scene renderer ───────────────────────────────────────────────
-function gotoScene(idx, transOverride) {
-  if (!CONFIG || !CONFIG.scenes.length) return;
-  idx = ((idx % CONFIG.scenes.length) + CONFIG.scenes.length) % CONFIG.scenes.length;
-  currentSceneIdx = idx;
-  const scene = CONFIG.scenes[idx];
-  const trans = transOverride || scene.transition || CONFIG.settings.default_transition || 'fade';
-  const wrap  = document.getElementById('scene-wrap');
-  const standby = document.getElementById('standby-title');
+const BIAS_LABELS = {
+  far_left:'Far Left', left:'Left', lean_left:'Lean Left',
+  center:'Center', lean_right:'Lean Right', right:'Right', far_right:'Far Right'
+};
 
-  // Out animation
-  wrap.classList.remove('fade-in','slide-in','zoom-in');
-  wrap.classList.add(trans === 'slide-up' ? 'slide-out' : trans === 'zoom-in' ? 'zoom-out' : 'fade-out');
-
-  setTimeout(() => {
-    renderScene(scene, wrap);
-    wrap.classList.remove('fade-out','slide-out','zoom-out');
-    wrap.classList.add(trans === 'slide-up' ? 'slide-in' : trans === 'zoom-in' ? 'zoom-in' : 'fade-in');
-    // Standby title
-    const isStandby = scene.layout === 'fullscreen-bg';
-    standby.classList.toggle('visible', isStandby);
-    if (isStandby) {
-      document.getElementById('standby-h1').textContent   = scene.title    || 'Civic Resilience Network';
-      document.getElementById('standby-sub').textContent  = scene.subtitle || 'Live Broadcast';
-    }
-    // Scene nav indicator
-    document.getElementById('scene-nav').textContent =
-      `Scene ${idx+1}/${CONFIG.scenes.length}: ${scene.name}`;
-  }, CONFIG.settings.default_transition_ms || 800);
+// ── BiasMeter ────────────────────────────────────────────────────────────────
+function BiasMeter({ bias, score }) {
+  const pct = biasToPercent(score ?? 0);
+  return (
+    <div style={{minWidth:120}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}}>
+        <span className={`bias-badge b-${bias}`}>{BIAS_LABELS[bias] || bias}</span>
+      </div>
+      <div className="bias-track">
+        <div className="bias-thumb" style={{left:`${pct}%`}} />
+      </div>
+      <div className="bias-labels"><span>L</span><span>C</span><span>R</span></div>
+    </div>
+  );
 }
 
-function renderScene(scene, wrap) {
-  wrap.innerHTML = '';
-  wrap.className = 'layout-' + scene.layout.replace(/-/g,'_').replace(/_/g,'-');
-  // Reset to exact layout class
-  wrap.className = `layout-${scene.layout}`;
+// ── CoverageSummary ──────────────────────────────────────────────────────────
+function CoverageSummary({ sources }) {
+  if (!sources || sources.length === 0) return null;
+  const left = sources.filter(s => (s.bias_score ?? 0) < -0.5).length;
+  const right = sources.filter(s => (s.bias_score ?? 0) > 0.5).length;
+  const center = sources.length - left - right;
+  const total = sources.length;
+  const lw = Math.round((left/total)*100);
+  const cw = Math.round((center/total)*100);
+  const rw = 100 - lw - cw;
+  const isBlindspot = (left === 0 && right > 0) || (right === 0 && left > 0);
+  return (
+    <div>
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4,flexWrap:'wrap'}}>
+        <span className="coverage-count"><strong>{total}</strong> sources</span>
+        {isBlindspot && <span className="blindspot-flag">⚠ Blindspot</span>}
+      </div>
+      <div className="coverage-bar">
+        {lw > 0 && <div className="cov-seg cov-left" style={{width:`${lw}%`}} />}
+        {cw > 0 && <div className="cov-seg cov-center" style={{width:`${cw}%`}} />}
+        {rw > 0 && <div className="cov-seg cov-right" style={{width:`${rw}%`}} />}
+      </div>
+      <div style={{display:'flex',gap:12,fontSize:11,color:'var(--muted)'}}>
+        {left > 0 && <span style={{color:'var(--left)'}}>◆ {left} Left</span>}
+        {center > 0 && <span style={{color:'var(--center)'}}>◆ {center} Center</span>}
+        {right > 0 && <span style={{color:'var(--right)'}}>◆ {right} Right</span>}
+      </div>
+    </div>
+  );
+}
 
-  (scene.images || []).forEach((img, i) => {
-    const div = document.createElement('div');
-    div.className = 'image-area';
-    if (img.src) {
-      const im = document.createElement('img');
-      im.src = img.src;
-      im.alt = img.label || '';
-      div.appendChild(im);
-    }
-    if (img.label) {
-      const lbl = document.createElement('div');
-      lbl.className = 'img-label';
-      lbl.textContent = img.label;
-      div.appendChild(lbl);
-    }
-    wrap.appendChild(div);
+// ── NewsCard ─────────────────────────────────────────────────────────────────
+function NewsCard({ article }) {
+  const si = article.source_info || getSourceInfo(article.url || '') || {};
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="news-card">
+      <div className="card-top">
+        <div style={{flex:1}}>
+          <div className="card-headline">
+            <a href={article.url} target="_blank" rel="noopener">{article.title}</a>
+          </div>
+          <div className="card-meta">
+            <span className="source-chip">
+              <strong style={{color:'var(--white)'}}>{si.name || article.source_name || 'Unknown'}</strong>
+              {si.owner && <span className="owner">· {si.owner}</span>}
+            </span>
+            {si.factuality && <span className={`factuality f-${si.factuality}`}>{si.factuality.replace('_',' ')}</span>}
+            {article.published_at && (
+              <span style={{fontSize:12,color:'var(--muted)'}}>
+                {new Date(article.published_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+              </span>
+            )}
+          </div>
+        </div>
+        {si.bias && <BiasMeter bias={si.bias} score={si.bias_score} />}
+      </div>
+
+      {article.coverage && <CoverageSummary sources={article.coverage} />}
+
+      {article.description && (
+        <div className="card-description">
+          {expanded ? article.description : article.description.slice(0,180) + (article.description.length > 180 ? '…' : '')}
+          {article.description.length > 180 && (
+            <button onClick={() => setExpanded(!expanded)}
+              style={{color:'var(--teal)',fontSize:12,marginLeft:6,background:'none'}}>
+              {expanded ? 'less' : 'more'}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Source Breakdown Widget ──────────────────────────────────────────────────
+function SourceBreakdown() {
+  const ownershipCounts = {};
+  Object.values(SOURCES).forEach(s => {
+    const cat = s.owner.includes('nonprofit') ? 'Nonprofit' :
+                s.owner.includes('Murdoch') ? 'Murdoch Empire' :
+                s.owner.includes('Axel') ? 'Axel Springer' :
+                s.owner.includes('Comcast') ? 'Comcast/NBC' :
+                s.owner.includes('Disney') ? 'Disney/ABC' :
+                s.owner.includes('Warner') ? 'Warner Bros.' : 'Other';
+    ownershipCounts[cat] = (ownershipCounts[cat] || 0) + 1;
   });
+  const total = Object.values(ownershipCounts).reduce((a,b)=>a+b,0);
+  const sorted = Object.entries(ownershipCounts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  return (
+    <div className="widget">
+      <div className="widget-title">Ownership Map</div>
+      {sorted.map(([name, count]) => (
+        <div key={name} className="ownership-row">
+          <span className="own-label">{name}</span>
+          <div className="own-bar-wrap"><div className="own-bar" style={{width:`${(count/sorted[0][1])*100}%`}} /></div>
+          <span className="own-pct">{Math.round((count/total)*100)}%</span>
+        </div>
+      ))}
+      <a href="civic-overlay/ownership-graph.html" style={{fontSize:12,marginTop:12,display:'block',color:'var(--teal)'}}>
+        View full ownership graph →
+      </a>
+    </div>
+  );
 }
 
-// ─── Auto-advance ─────────────────────────────────────────────────
-let autoTimer = null;
-function startAutoAdvance() {
-  if (autoTimer) clearInterval(autoTimer);
-  autoTimer = setInterval(() => {
-    gotoScene(currentSceneIdx + 1);
-  }, CONFIG.settings.auto_advance_ms || 10000);
+// ── Top Sources Widget ────────────────────────────────────────────────────────
+function TopSources() {
+  const sources = Object.values(SOURCES)
+    .filter(s => s.factuality === 'very_high')
+    .sort((a,b) => Math.abs(a.bias_score) - Math.abs(b.bias_score))
+    .slice(0,6);
+  return (
+    <div className="widget">
+      <div className="widget-title">High Credibility Sources</div>
+      {sources.map(s => (
+        <div key={s.name} className="source-row">
+          <div>
+            <div className="source-name">{s.name}</div>
+            <div className="source-owner-sm">{s.owner}</div>
+          </div>
+          <span className={`bias-badge b-${s.bias}`} style={{fontSize:10}}>{BIAS_LABELS[s.bias]}</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
-// ─── Lower thirds ─────────────────────────────────────────────────
-function showLowerThird(name, title, durationMs) {
-  const el = document.getElementById('lower-third');
-  document.getElementById('lt-name').textContent  = name;
-  document.getElementById('lt-title').textContent = title;
-  el.classList.add('visible');
-  if (lowerThirdTimer) clearTimeout(lowerThirdTimer);
-  lowerThirdTimer = setTimeout(() => {
-    el.classList.remove('visible');
-  }, durationMs || 5000);
+// ── NewsletterSection ─────────────────────────────────────────────────────────
+function NewsletterSection() {
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState('idle');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email) return;
+    setStatus('loading');
+    try {
+      const r = await fetch(`${API}/subscribe`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','x-api-key': window.CRN_KEY || ''},
+        body: JSON.stringify({ email })
+      });
+      setStatus(r.ok ? 'success' : 'error');
+    } catch {
+      // Fallback: link to Substack
+      window.open('https://civicresiliencenetwork.substack.com', '_blank');
+      setStatus('success');
+    }
+  };
+
+  return (
+    <section className="newsletter-section" id="newsletter">
+      <div className="container">
+        <div className="nl-card">
+          <div style={{fontSize:32,marginBottom:12}}>📬</div>
+          <h2>The Civic Resilience Brief</h2>
+          <p>Weekly news intelligence — bias ratings, ownership transparency, and the stories your usual sources aren't covering. Free. No ads. No spin.</p>
+          {status === 'success' ? (
+            <div style={{color:'var(--teal)',fontWeight:700,fontSize:16}}>
+              ✓ You're in. Check your inbox.
+            </div>
+          ) : (
+            <form className="nl-form" onSubmit={handleSubmit}>
+              <input type="email" placeholder="your@email.com" value={email}
+                onChange={e => setEmail(e.target.value)} required />
+              <button className="nl-submit" type="submit" disabled={status==='loading'}>
+                {status === 'loading' ? '...' : 'Subscribe'}
+              </button>
+            </form>
+          )}
+          <div style={{marginTop:20,fontSize:13,color:'var(--muted)'}}>
+            <a href="https://civicresiliencenetwork.substack.com" target="_blank" rel="noopener">
+              View past issues →
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }
 
-function queueLowerThirds(items) {
-  lowerThirdQueue = [...(items || [])];
-  processLowerThirdQueue();
+// ── CivicTools ────────────────────────────────────────────────────────────────
+function CivicTools() {
+  const tools = [
+    { icon:'🗳️', title:'Voter Registration', desc:'Check your registration status or register to vote in your state.', url:'https://vote.gov', label:'Vote.gov' },
+    { icon:'🏛️', title:'Find Your Rep', desc:'Look up your federal, state, and local elected officials.', url:'https://www.usa.gov/elected-officials', label:'USA.gov' },
+    { icon:'📋', title:'Track Legislation', desc:'Follow bills through Congress in real time.', url:'https://www.congress.gov', label:'Congress.gov' },
+    { icon:'📰', title:'Media Bias Check', desc:'Look up bias and factuality ratings for any news source.', url:'https://mediabiasfactcheck.com', label:'MBFC' },
+    { icon:'🔍', title:'Fact Check', desc:'Verify claims from politicians and media with independent fact-checkers.', url:'https://www.politifact.com', label:'PolitiFact' },
+    { icon:'🌐', title:'Open Secrets', desc:'Follow the money in politics — campaign finance transparency.', url:'https://www.opensecrets.org', label:'OpenSecrets.org' },
+  ];
+  return (
+    <section id="tools" style={{padding:'80px 0'}}>
+      <div className="container">
+        <div className="section-header">
+          <div className="section-title">Civic Tools</div>
+          <span className="section-tag">Resources</span>
+        </div>
+        <div className="civic-grid">
+          {tools.map(t => (
+            <div key={t.title} className="civic-card">
+              <div className="civic-icon">{t.icon}</div>
+              <h3>{t.title}</h3>
+              <p>{t.desc}</p>
+              <a href={t.url} target="_blank" rel="noopener" className="civic-link">
+                {t.label} <span>→</span>
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
 }
 
-function processLowerThirdQueue() {
-  if (!lowerThirdQueue.length) return;
-  const lt = lowerThirdQueue.shift();
-  showLowerThird(lt.name, lt.title, lt.duration_ms || 5000);
-  setTimeout(processLowerThirdQueue, (lt.duration_ms || 5000) + 1200);
-}
+// ── Main News Feed ────────────────────────────────────────────────────────────
+const TOPICS = ['All','Politics','Democracy','Local Government','Economy','Environment','Education'];
+const RSS_FEEDS = [
+  'https://feeds.npr.org/1001/rss.xml',
+  'https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml',
+  'https://feeds.washingtonpost.com/rss/politics',
+];
 
-// ─── Ticker ───────────────────────────────────────────────────────
-function initTicker() {
-  const items = CONFIG.ticker_items || ['civicresilience.net — Live'];
-  const inner = document.getElementById('ticker-inner');
-  // Double the items so seamless loop works
-  const all = [...items, ...items];
-  inner.innerHTML = all.map(t =>
-    `<span class="ticker-item">${t}</span><span class="ticker-sep">◆</span>`
-  ).join('');
-  // Set animation duration based on content length
-  const totalChars = items.join('').length;
-  const dur = Math.max(20, totalChars * 0.22);
-  inner.style.animationDuration = dur + 's';
-}
+function NewsFeed() {
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [topic, setTopic] = useState('All');
+  const [error, setError] = useState(null);
 
-// ─── Clock ────────────────────────────────────────────────────────
-function initClock() {
-  const el = document.getElementById('clock');
-  function tick() {
-    const now = new Date();
-    el.textContent = now.toLocaleTimeString('en-US',
-      { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12: true });
-  }
-  tick();
-  setInterval(tick, 1000);
-}
-
-// ─── Keyboard / URL controls ──────────────────────────────────────
-document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowRight' || e.key === ' ') gotoScene(currentSceneIdx + 1);
-  if (e.key === 'ArrowLeft')  gotoScene(currentSceneIdx - 1);
-  if (e.key >= '1' && e.key <= '9') gotoScene(parseInt(e.key) - 1);
-  if (e.key === 'l') queueLowerThirds(CONFIG.lower_thirds || []);
-  if (e.key === 'r') loadConfig(); // hot reload
-});
-
-// URL hash control: overlay.html#scene=2 or #lt=James+Flanagano|Title
-function checkHash() {
-  const hash = window.location.hash.slice(1);
-  if (!hash || !CONFIG) return;
-  const params = Object.fromEntries(hash.split('&').map(p => p.split('=')));
-  if (params.scene !== undefined) gotoScene(parseInt(params.scene) - 1);
-  if (params.lt) {
-    const [name, title] = decodeURIComponent(params.lt).split('|');
-    showLowerThird(name, title || '', 6000);
-  }
-  if (params.reload) loadConfig();
-}
-window.addEventListener('hashchange', checkHash);
-
-// ─── Particle Network Background ──────────────────────────────────
-(function initParticles() {
-  const canvas = document.getElementById('bg-canvas');
-  const ctx    = canvas.getContext('2d');
-  canvas.width = 1920; canvas.height = 1080;
-
-  const NUM = 80;
-  const MAX_DIST = 200;
-  const PRIMARY   = [0, 180, 216];   // #00b4d8
-  const SECONDARY = [26, 58, 92];    // #1a3a5c
-
-  // Fill background gradient
-  function drawBg() {
-    const grad = ctx.createRadialGradient(960, 540, 0, 960, 540, 900);
-    grad.addColorStop(0,   '#0d2137');
-    grad.addColorStop(0.6, '#091929');
-    grad.addColorStop(1,   '#040d14');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 1920, 1080);
-  }
-
-  // Subtle hex grid overlay
-  function drawHexGrid() {
-    ctx.save();
-    ctx.strokeStyle = 'rgba(0,180,216,0.04)';
-    ctx.lineWidth = 1;
-    const size = 60;
-    const h = size * Math.sqrt(3);
-    for (let row = -1; row < 1080/h + 1; row++) {
-      for (let col = -1; col < 1920/(size*1.5) + 1; col++) {
-        const x = col * size * 1.5;
-        const y = row * h + (col % 2 === 0 ? 0 : h/2);
-        ctx.beginPath();
-        for (let i = 0; i < 6; i++) {
-          const angle = Math.PI/180 * (60*i - 30);
-          const px = x + size * Math.cos(angle);
-          const py = y + size * Math.sin(angle);
-          i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-        }
-        ctx.closePath();
-        ctx.stroke();
+  const fetchNews = useCallback(async () => {
+    setLoading(true); setError(null);
+    try {
+      // Try live API first
+      const r = await fetch(`${API}/news?topic=${encodeURIComponent(topic)}&limit=15`, {
+        headers: { 'x-api-key': window.CRN_KEY || '' },
+        signal: AbortSignal.timeout(6000)
+      });
+      if (r.ok) {
+        const data = await r.json();
+        setArticles(data.articles || []);
+        setLoading(false);
+        return;
       }
-    }
-    ctx.restore();
-  }
+    } catch {}
 
-  // Particles
-  const particles = Array.from({length: NUM}, () => ({
-    x:  Math.random() * 1920,
-    y:  Math.random() * 1080,
-    vx: (Math.random() - 0.5) * 0.5,
-    vy: (Math.random() - 0.5) * 0.5,
-    r:  1.5 + Math.random() * 3,
-    alpha: 0.4 + Math.random() * 0.6,
-    pulse: Math.random() * Math.PI * 2,
-  }));
+    // Fallback: curated mock articles with real source data
+    setArticles(getMockArticles(topic));
+    setLoading(false);
+  }, [topic]);
 
-  function lerp(a, b, t) { return a + (b-a)*t; }
+  useEffect(() => { fetchNews(); }, [fetchNews]);
 
-  function drawParticles(t) {
-    particles.forEach(p => {
-      p.pulse += 0.018;
-      const a = p.alpha * (0.6 + 0.4 * Math.sin(p.pulse));
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(${PRIMARY[0]},${PRIMARY[1]},${PRIMARY[2]},${a})`;
-      ctx.fill();
-    });
-  }
+  return (
+    <section id="news" style={{padding:'60px 0'}}>
+      <div className="container">
+        <div className="section-header" style={{marginBottom:16}}>
+          <div className="section-title">News Intelligence Feed</div>
+          <button onClick={fetchNews} style={{background:'none',color:'var(--teal)',fontSize:13,fontWeight:600}}>
+            ↻ Refresh
+          </button>
+        </div>
 
-  function drawConnections() {
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i+1; j < particles.length; j++) {
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < MAX_DIST) {
-          const a = (1 - dist/MAX_DIST) * 0.25;
-          ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = `rgba(${PRIMARY[0]},${PRIMARY[1]},${PRIMARY[2]},${a})`;
-          ctx.lineWidth = 0.8;
-          ctx.stroke();
-        }
-      }
-    }
-  }
+        <div className="topic-filters">
+          {TOPICS.map(t => (
+            <button key={t} className={`topic-btn${topic===t?' active':''}`}
+              onClick={() => setTopic(t)}>{t}</button>
+          ))}
+        </div>
 
-  function moveParticles() {
-    particles.forEach(p => {
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < 0) p.x = 1920; if (p.x > 1920) p.x = 0;
-      if (p.y < 0) p.y = 1080; if (p.y > 1080) p.y = 0;
-    });
-  }
-
-  // Slow wave distortion lines
-  function drawWaves(t) {
-    ctx.save();
-    ctx.globalAlpha = 0.06;
-    for (let w = 0; w < 3; w++) {
-      ctx.beginPath();
-      const yBase = 200 + w * 340;
-      for (let x = 0; x <= 1920; x += 8) {
-        const y = yBase + Math.sin((x/280) + t*0.0008 + w*1.2) * 40
-                       + Math.sin((x/120) + t*0.0015 + w*0.7) * 18;
-        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      }
-      ctx.strokeStyle = `rgba(${PRIMARY[0]},${PRIMARY[1]},${PRIMARY[2]},1)`;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  let frame = 0;
-  function animate(ts) {
-    frame++;
-    ctx.clearRect(0, 0, 1920, 1080);
-    drawBg();
-    if (frame % 4 === 0) drawHexGrid(); // draw hex every 4 frames (static-ish)
-    drawWaves(ts);
-    drawConnections();
-    drawParticles(ts);
-    moveParticles();
-    requestAnimationFrame(animate);
-  }
-  // Draw hex once into offscreen first
-  requestAnimationFrame(animate);
-})();
-
-// ─── Live API state polling ────────────────────────────────────────
-// Polls api.civicresilience.net/overlay/state every 5s for speaker
-// and ticker updates pushed from the control panel or news bot.
-const API_STATE_URL = 'https://api.civicresilience.net/overlay/state';
-let _apiVersion = -1;
-let _apiLtVisible = false;
-
-async function pollApiState() {
-  try {
-    const r = await fetch(API_STATE_URL);
-    if (!r.ok) return;
-    const s = await r.json();
-    if (s.version === _apiVersion) return;
-    _apiVersion = s.version;
-
-    // Lower third
-    const ltEl = document.getElementById('lower-third');
-    if (s.lower_third_visible && s.speaker_name) {
-      document.getElementById('lt-name').textContent  = s.speaker_name  || '';
-      document.getElementById('lt-title').textContent = s.speaker_title || '';
-      ltEl.classList.add('visible');
-      _apiLtVisible = true;
-    } else if (_apiLtVisible) {
-      ltEl.classList.remove('visible');
-      _apiLtVisible = false;
-    }
-
-    // Ticker — API items take over when present
-    if (s.ticker_items && s.ticker_items.length) {
-      if (CONFIG) CONFIG.ticker_items = s.ticker_items;
-      else CONFIG = { ticker_items: s.ticker_items };
-      initTicker();
-    }
-  } catch(e) {}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 320px',gap:24,alignItems:'start'}}>
+          <div>
+            {loading ? (
+              <div className="loading-state">
+                <div className="spinner" />
+                Fetching latest news…
+              </div>
+            ) : error ? (
+              <div className="loading-state" style={{color:'#fca5a5'}}>{error}</div>
+            ) : (
+              <div className="news-grid">
+                {articles.map((a, i) => <NewsCard key={i} article={a} />)}
+              </div>
+            )}
+          </div>
+          <div className="sidebar">
+            <SourceBreakdown />
+            <TopSources />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }
-setInterval(pollApiState, 5000);
 
-// ─── Boot ─────────────────────────────────────────────────────────
-loadConfig().then(() => { checkHash(); pollApiState(); });
+// ── Mock articles (fallback when API is unreachable) ─────────────────────────
+function getMockArticles(topic) {
+  const articles = [
+    {
+      title: "Congress weighs new limits on emergency executive powers",
+      url: "https://apnews.com",
+      source_name: "AP News",
+      description: "Bipartisan legislation introduced this week would require congressional approval for extended emergency declarations — a response to concerns about executive overreach during recent crises.",
+      published_at: new Date().toISOString(),
+      source_info: SOURCES['apnews.com'],
+      coverage: [
+        SOURCES['apnews.com'], SOURCES['reuters.com'], SOURCES['thehill.com'],
+        SOURCES['foxnews.com'], SOURCES['washingtonpost.com'], SOURCES['nytimes.com']
+      ]
+    },
+    {
+      title: "Local election turnout hits 20-year high in midterm primaries",
+      url: "https://npr.org",
+      source_name: "NPR",
+      description: "Voter participation in local races jumped significantly this cycle, with election officials crediting expanded early voting access and increased civic engagement efforts.",
+      published_at: new Date(Date.now() - 3600000).toISOString(),
+      source_info: SOURCES['npr.org'],
+      coverage: [SOURCES['npr.org'], SOURCES['apnews.com'], SOURCES['usatoday.com']]
+    },
+    {
+      title: "Supreme Court to hear challenge to state-level voting map redistricting",
+      url: "https://thehill.com",
+      source_name: "The Hill",
+      description: "Justices agreed to take up a case that could set new standards for how states draw congressional districts, with broad implications for electoral representation.",
+      published_at: new Date(Date.now() - 7200000).toISOString(),
+      source_info: SOURCES['thehill.com'],
+      coverage: [
+        SOURCES['thehill.com'], SOURCES['reuters.com'], SOURCES['wsj.com'],
+        SOURCES['foxnews.com'], SOURCES['nytimes.com']
+      ]
+    },
+    {
+      title: "Campaign finance disclosure rules face renewed legal challenge",
+      url: "https://propublica.org",
+      source_name: "ProPublica",
+      description: "A federal appeals court case could weaken requirements for 'dark money' groups to disclose donors — a story receiving limited coverage from right-leaning outlets.",
+      published_at: new Date(Date.now() - 10800000).toISOString(),
+      source_info: SOURCES['propublica.org'],
+      coverage: [SOURCES['propublica.org'], SOURCES['washingtonpost.com'], SOURCES['theatlantic.com']]
+    },
+    {
+      title: "States expand access to official government records under open data push",
+      url: "https://reuters.com",
+      source_name: "Reuters",
+      description: "Several states this year enacted or strengthened open-records laws, making it easier for citizens and journalists to access government data.",
+      published_at: new Date(Date.now() - 14400000).toISOString(),
+      source_info: SOURCES['reuters.com'],
+      coverage: [
+        SOURCES['reuters.com'], SOURCES['apnews.com'], SOURCES['bloomberg.com'],
+        SOURCES['wsj.com'], SOURCES['nytimes.com'], SOURCES['foxnews.com'], SOURCES['axios.com']
+      ]
+    },
+  ];
 
-// Hot reload scenes.json every 30s
-setInterval(() => {
-  if (CONFIG) loadConfig();
-}, 30000);
+  if (topic === 'All') return articles;
+  if (topic === 'Democracy') return articles.filter((_,i) => [0,1,2].includes(i));
+  if (topic === 'Politics') return articles.filter((_,i) => [0,2,3].includes(i));
+  return articles;
+}
+
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  const [activeSection, setActiveSection] = useState('news');
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) setActiveSection(e.target.id); });
+    }, { threshold: 0.3 });
+    document.querySelectorAll('section[id]').forEach(s => observer.observe(s));
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <>
+      <nav>
+        <div className="nav-inner">
+          <div className="nav-logo">
+            <div className="dot" />
+            Civic Resilience Network
+          </div>
+          <div className="nav-links">
+            <a href="#news" className={activeSection==='news'?'active':''}>News Feed</a>
+            <a href="#newsletter" className={activeSection==='newsletter'?'active':''}>Newsletter</a>
+            <a href="#tools" className={activeSection==='tools'?'active':''}>Civic Tools</a>
+            <a href="https://github.com/flanaganj42/civic-resilience" target="_blank" rel="noopener">About</a>
+          </div>
+          <a href="#newsletter" className="nav-cta">Subscribe Free</a>
+        </div>
+      </nav>
+
+      <section className="hero">
+        <div className="container">
+          <div className="hero-eyebrow">Independent News Intelligence</div>
+          <h1>Know <span>who's covering</span> what — and who isn't.</h1>
+          <p className="hero-sub">See political bias ratings, corporate ownership, and coverage blindspots across 60+ news sources — all in one place.</p>
+          <div style={{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}}>
+            <a href="#news" className="nav-cta" style={{padding:'12px 28px',fontSize:15}}>Explore the Feed</a>
+            <a href="#newsletter" style={{padding:'12px 28px',fontSize:15,border:'1px solid var(--border)',borderRadius:6,color:'var(--white)'}}>Get the Brief</a>
+          </div>
+          <div className="hero-stats">
+            <div><div className="stat-val">60+</div><div className="stat-lbl">Sources Tracked</div></div>
+            <div><div className="stat-val">7</div><div className="stat-lbl">Bias Categories</div></div>
+            <div><div className="stat-val">Free</div><div className="stat-lbl">Always</div></div>
+            <div><div className="stat-val">No Ads</div><div className="stat-lbl">Independent</div></div>
+          </div>
+        </div>
+      </section>
+
+      <NewsFeed />
+      <NewsletterSection />
+      <CivicTools />
+
+      <footer>
+        <div className="container">
+          <div className="footer-grid">
+            <div>
+              <div className="footer-brand">Civic Resilience Network</div>
+              <div className="footer-desc">Independent news intelligence for engaged citizens. We track bias, ownership, and coverage gaps so you can read the news with full context.</div>
+            </div>
+            <div className="footer-col">
+              <h4>Platform</h4>
+              <ul>
+                <li><a href="#news">News Feed</a></li>
+                <li><a href="#newsletter">Newsletter</a></li>
+                <li><a href="#tools">Civic Tools</a></li>
+                <li><a href="civic-overlay/">Live Broadcast</a></li>
+              </ul>
+            </div>
+            <div className="footer-col">
+              <h4>Resources</h4>
+              <ul>
+                <li><a href="https://vote.gov" target="_blank" rel="noopener">Voter Registration</a></li>
+                <li><a href="https://www.congress.gov" target="_blank" rel="noopener">Track Legislation</a></li>
+                <li><a href="https://mediabiasfactcheck.com" target="_blank" rel="noopener">Media Bias Check</a></li>
+                <li><a href="https://www.opensecrets.org" target="_blank" rel="noopener">Follow the Money</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <span>© {new Date().getFullYear()} Civic Resilience Network · civicresilience.net</span>
+            <span>Built with transparency in mind.</span>
+          </div>
+        </div>
+      </footer>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>
 </html>
