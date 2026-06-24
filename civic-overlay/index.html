@@ -575,9 +575,41 @@ function checkHash(){
   requestAnimationFrame(animate);
 })();
 
+// ─── Live API state polling ───────────────────────────────────────
+const API_STATE_URL='https://api.civicresilience.net/overlay/state';
+let _apiVersion=-1,_apiLtVisible=false;
+
+async function pollApiState(){
+  try{
+    const r=await fetch(API_STATE_URL);
+    if(!r.ok)return;
+    const s=await r.json();
+    if(s.version===_apiVersion)return;
+    _apiVersion=s.version;
+    // Lower third
+    const ltEl=document.getElementById('lower-third');
+    if(s.lower_third_visible&&s.speaker_name){
+      document.getElementById('lt-name').textContent=s.speaker_name||'';
+      document.getElementById('lt-title').textContent=s.speaker_title||'';
+      ltEl.classList.add('visible');
+      _apiLtVisible=true;
+    } else if(_apiLtVisible){
+      ltEl.classList.remove('visible');
+      _apiLtVisible=false;
+    }
+    // Ticker — API items override scenes.json
+    if(s.ticker_items&&s.ticker_items.length){
+      if(CONFIG)CONFIG.ticker_items=s.ticker_items;
+      else CONFIG={ticker_items:s.ticker_items};
+      initTicker();
+    }
+  }catch(e){}
+}
+setInterval(pollApiState,5000);
+
 initSidePanels();
-loadConfig().then(checkHash);
-setInterval(()=>{if(CONFIG)initTicker();},30000);
+loadConfig().then(()=>{checkHash();pollApiState();});
+setInterval(()=>{if(CONFIG)loadConfig();},30000);
 </script>
 </body>
 </html>
