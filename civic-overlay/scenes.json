@@ -15,29 +15,37 @@
     "logo_text": "civicresilience.net",
     "logo_position": "bottom-right"
   },
-
   "ticker_items": [
-    "Civic Resilience Network — Live Broadcast",
+    "Civic Resilience Network \u2014 Live Broadcast",
     "Building stronger communities through civic engagement",
-    "civicresilience.net — Stay informed. Stay engaged.",
+    "civicresilience.net \u2014 Stay informed. Stay engaged.",
     "Democracy works when citizens participate",
-    "Join the conversation — civicresilience.net"
+    "Join the conversation \u2014 civicresilience.net"
   ],
-
   "info_feed": [
     "Civic engagement is democracy in action",
-    "Community voices matter — civicresilience.net",
+    "Community voices matter \u2014 civicresilience.net",
     "Stay informed. Stay engaged.",
     "Building resilient communities together",
     "Your participation strengthens democracy"
   ],
-
   "lower_thirds": [
-    { "name": "James Flanagan", "title": "Civic Resilience Network", "duration_ms": 5000 },
-    { "name": "Guest Speaker",  "title": "Community Advocate",       "duration_ms": 5000 },
-    { "name": "Panel Discussion", "title": "Civic Policy & Engagement", "duration_ms": 5000 }
+    {
+      "name": "James Flanagan",
+      "title": "Civic Resilience Network",
+      "duration_ms": 5000
+    },
+    {
+      "name": "Guest Speaker",
+      "title": "Community Advocate",
+      "duration_ms": 5000
+    },
+    {
+      "name": "Panel Discussion",
+      "title": "Civic Policy & Engagement",
+      "duration_ms": 5000
+    }
   ],
-
   "scenes": [
     {
       "id": "intro",
@@ -47,7 +55,7 @@
       "show_title": true,
       "title": "Civic Resilience Network",
       "subtitle": "Live Broadcast",
-      "background": "https://d8j0ntlcm91z4.cloudfront.net/user_3FLlwJ5yGAHyfRnKFrhBv8AvBal/hf_20260623_044141_7c9bc721-f5c5-4184-a9ce-cd7cecab80e0.png",
+      "background": "https://d8j0ntlcm91z4.cloudfront.net/user_3FLlwJ5yGAHyfRnKFrhBv8AvBal/hf_20260627_003345_439aece1-e718-4082-89be-07d910984092.png",
       "images": []
     },
     {
@@ -102,7 +110,10 @@
       "layout": "fullscreen",
       "transition": "fade",
       "images": [
-        { "src": "img/placeholder-1.jpg", "label": "Main Camera" }
+        {
+          "src": "img/placeholder-1.jpg",
+          "label": "Main Camera"
+        }
       ]
     },
     {
@@ -111,8 +122,14 @@
       "layout": "grid-2",
       "transition": "slide-up",
       "images": [
-        { "src": "img/placeholder-1.jpg", "label": "Speaker 1" },
-        { "src": "img/placeholder-2.jpg", "label": "Speaker 2" }
+        {
+          "src": "img/placeholder-1.jpg",
+          "label": "Speaker 1"
+        },
+        {
+          "src": "img/placeholder-2.jpg",
+          "label": "Speaker 2"
+        }
       ]
     },
     {
@@ -121,9 +138,18 @@
       "layout": "grid-3",
       "transition": "zoom-in",
       "images": [
-        { "src": "img/placeholder-1.jpg", "label": "Main" },
-        { "src": "img/placeholder-2.jpg", "label": "Guest 1" },
-        { "src": "img/placeholder-3.jpg", "label": "Guest 2" }
+        {
+          "src": "img/placeholder-1.jpg",
+          "label": "Main"
+        },
+        {
+          "src": "img/placeholder-2.jpg",
+          "label": "Guest 1"
+        },
+        {
+          "src": "img/placeholder-3.jpg",
+          "label": "Guest 2"
+        }
       ]
     },
     {
@@ -132,10 +158,22 @@
       "layout": "grid-4",
       "transition": "zoom-in",
       "images": [
-        { "src": "img/placeholder-1.jpg", "label": "Speaker 1" },
-        { "src": "img/placeholder-2.jpg", "label": "Speaker 2" },
-        { "src": "img/placeholder-3.jpg", "label": "Speaker 3" },
-        { "src": "img/placeholder-4.jpg", "label": "Speaker 4" }
+        {
+          "src": "img/placeholder-1.jpg",
+          "label": "Speaker 1"
+        },
+        {
+          "src": "img/placeholder-2.jpg",
+          "label": "Speaker 2"
+        },
+        {
+          "src": "img/placeholder-3.jpg",
+          "label": "Speaker 3"
+        },
+        {
+          "src": "img/placeholder-4.jpg",
+          "label": "Speaker 4"
+        }
       ]
     },
     {
@@ -144,8 +182,14 @@
       "layout": "sidebar-r",
       "transition": "slide-up",
       "images": [
-        { "src": "img/placeholder-1.jpg", "label": "Main Camera" },
-        { "src": "img/placeholder-2.jpg", "label": "Info Panel" }
+        {
+          "src": "img/placeholder-1.jpg",
+          "label": "Main Camera"
+        },
+        {
+          "src": "img/placeholder-2.jpg",
+          "label": "Info Panel"
+        }
       ]
     },
     {
@@ -154,8 +198,14 @@
       "layout": "pip",
       "transition": "fade",
       "images": [
-        { "src": "img/placeholder-1.jpg", "label": "" },
-        { "src": "img/placeholder-2.jpg", "label": "" }
+        {
+          "src": "img/placeholder-1.jpg",
+          "label": ""
+        },
+        {
+          "src": "img/placeholder-2.jpg",
+          "label": ""
+        }
       ]
     },
     {
